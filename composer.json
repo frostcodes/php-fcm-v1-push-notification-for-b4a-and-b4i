@@ -1,0 +1,5 @@
+{
+    "require": {
+        "lkaybob/php-fcm-v1": "^1.0"
+    }
+}
