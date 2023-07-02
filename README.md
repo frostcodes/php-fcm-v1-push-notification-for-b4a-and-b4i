@@ -1,4 +1,4 @@
-# PHP FCM sample for B4A
+# PHP FCM sample for B4A and B4I
 
 Send push notifications to your B4A (android) or B4I (ios) app.
   
