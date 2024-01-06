@@ -14,7 +14,7 @@ Send push notifications to your B4A (android) or B4I (ios) app.
 - Run `firebase.utils.php` using a web server or php-cli via your terminal
 
   
-## Do I need composer ro any extra tool to use?
+## Do I need composer or any extra tool to use the code?
 
 NO! B4X developers prefer to avoid tools like Composer. This is why I've included everything necessary to run the code in the provided zip file/repo. If you decide to clone the repo, you can install composer for advance development if you want.
 
@@ -40,7 +40,7 @@ NO! B4X developers prefer to avoid tools like Composer. This is why I've include
 
 ## Stay In Touch
 
-[![LinkedIn](https://github.com/frostcodes/repo-images/blob/main/linkedin.png?raw=true)](https://www.linkedin.com/in/seyi-aderinkomi-923b75145/)  [![Twitter](https://camo.githubusercontent.com/2cbca4be42d81c6833fd417d74f5322e80861326d03d52289924138947be7b4e/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f547769747465722d2532333144413146322e7376673f6c6f676f3d54776974746572266c6f676f436f6c6f723d7768697465)](https://twitter.com/iamfrostcodes)
+[![LinkedIn](https://github.com/frostcodes/repo-images/blob/main/linkedin.png?raw=true)](https://www.linkedin.com/in/seyi-aderinkomi-923b75145/)  [![Twitter](https://github.com/frostcodes/repo-images/blob/main/x-logo-black.png?raw=true)](https://twitter.com/iamfrostcodes)
 
 
 ## License
