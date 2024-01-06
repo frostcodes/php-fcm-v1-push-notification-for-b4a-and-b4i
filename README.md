@@ -40,7 +40,7 @@ NO! B4X developers prefer to avoid tools like Composer. This is why I've include
 
 ## Stay In Touch
 
-[![LinkedIn](https://github.com/frostcodes/repo-images/blob/main/linkedin.png?raw=true)](https://www.linkedin.com/in/seyi-aderinkomi-923b75145/)  [![Twitter](https://github.com/frostcodes/repo-images/blob/main/x-logo-black.png?raw=true)](https://twitter.com/iamfrostcodes)
+[![LinkedIn](https://github.com/frostcodes/repo-images/blob/main/linkedin.png?raw=true)](https://www.linkedin.com/in/seyi-aderinkomi-923b75145/)  ||   [![Twitter](https://github.com/frostcodes/repo-images/blob/main/x-logo-black.png?raw=true)](https://twitter.com/iamfrostcodes)
 
 
 ## License
