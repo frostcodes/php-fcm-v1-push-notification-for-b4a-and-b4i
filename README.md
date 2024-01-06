@@ -14,9 +14,9 @@ Send push notifications to your B4A (android) or B4I (ios) app.
 - Run `firebase.utils.php` using a web server or php-cli via your terminal
 
   
-## Why did you add the vendor folder?
+## Do I need composer ro any extra tool to use?
 
-Most B4A/B4I users don't really like to deal with using an extra tool (composer) to get the code working.
+NO! B4X developers prefer to avoid tools like Composer. This is why I've included everything necessary to run the code in the provided zip file/repo. If you decide to clone the repo, you can install composer for advance development if you want.
   
 
 ## 💰 Support my work
