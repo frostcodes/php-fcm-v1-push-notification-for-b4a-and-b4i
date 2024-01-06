@@ -17,12 +17,10 @@ Send push notifications to your B4A (android) or B4I (ios) app.
 ## Do I need composer ro any extra tool to use?
 
 NO! B4X developers prefer to avoid tools like Composer. This is why I've included everything necessary to run the code in the provided zip file/repo. If you decide to clone the repo, you can install composer for advance development if you want.
-  
 
-## 💰 Support my work
 
-MADE WITH ❤ by [PUNCHLINE TECHNOLOGIES](http://punchlinetech.com/)
-  
+
+## 💰 Support my work  
 
 [![Paystack](https://raw.githubusercontent.com/frostcodes/repo-images/main/paystack-channels.png)](https://paystack.com/pay/rbhzwdgozj)
 
