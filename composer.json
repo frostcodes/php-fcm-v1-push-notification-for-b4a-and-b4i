@@ -1,5 +1,5 @@
 {
     "require": {
-        "lkaybob/php-fcm-v1": "^1.0"
+        "kreait/firebase-php": "^7.0"
     }
 }
