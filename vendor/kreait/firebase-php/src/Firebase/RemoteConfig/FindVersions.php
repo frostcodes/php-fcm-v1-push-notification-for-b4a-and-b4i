@@ -27,8 +27,8 @@ use Kreait\Firebase\Util\DT;
 class FindVersions
 {
     private ?DateTimeImmutable $since = null;
+
     private ?DateTimeImmutable $until = null;
-    private ?VersionNumber $upToVersion = null;
 
     /**
      * @var positive-int|null
@@ -39,6 +39,8 @@ class FindVersions
      * @var positive-int|null
      */
     private ?int $pageSize = null;
+
+    private ?VersionNumber $upToVersion = null;
 
     private function __construct()
     {
@@ -56,20 +58,24 @@ class FindVersions
     {
         $query = self::all();
 
-        if ($value = $params['startingAt'] ?? $params['startTime'] ?? $params['since'] ?? null) {
+        $value = $params['startingAt'] ?? $params['startTime'] ?? $params['since'] ?? null;
+        if ($value !== null) {
             $query = $query->startingAt(DT::toUTCDateTimeImmutable($value));
         }
 
-        if ($value = $params['endingAt'] ?? $params['endTime'] ?? $params['until'] ?? null) {
+        $value = $params['endingAt'] ?? $params['endTime'] ?? $params['until'] ?? null;
+        if ($value !== null) {
             $query = $query->endingAt(DT::toUTCDateTimeImmutable($value));
         }
 
-        if ($value = $params['lastVersionBeing'] ?? $params['endVersionNumber'] ?? $params['up_to_version'] ?? null) {
+        $value = $params['lastVersionBeing'] ?? $params['endVersionNumber'] ?? $params['up_to_version'] ?? null;
+        if ($value !== null) {
             $versionNumber = $value instanceof VersionNumber ? $value : VersionNumber::fromValue($value);
             $query = $query->upToVersion($versionNumber);
         }
 
-        if ($value = $params['pageSize'] ?? $params['page_size'] ?? null) {
+        $value = $params['pageSize'] ?? $params['page_size'] ?? null;
+        if ($value !== null) {
             $value = (int) $value;
 
             if ($value >= 1) {
@@ -78,7 +84,8 @@ class FindVersions
             }
         }
 
-        if ($value = $params['limit'] ?? null) {
+        $value = $params['limit'] ?? null;
+        if ($value !== null) {
             $value = (int) $value;
 
             if ($value >= 1) {

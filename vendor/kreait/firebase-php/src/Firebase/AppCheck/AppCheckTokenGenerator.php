@@ -11,11 +11,14 @@ use Psr\Clock\ClockInterface;
 
 /**
  * @internal
+ *
+ * @todo Add #[SensitiveParameter] attribute to the private key once the minimum required PHP version is >=8.2
  */
 final class AppCheckTokenGenerator
 {
     private const APP_CHECK_AUDIENCE = 'https://firebaseappcheck.googleapis.com/google.firebase.appcheck.v1.TokenExchangeService';
-    private ClockInterface $clock;
+
+    private readonly ClockInterface $clock;
 
     /**
      * @param non-empty-string $clientEmail
@@ -48,7 +51,7 @@ final class AppCheckTokenGenerator
             'exp' => $now + 300,
         ];
 
-        if (null !== $options && $options->ttl) {
+        if ($options?->ttl !== null) {
             $payload['ttl'] = $options->ttl.'s';
         }
 

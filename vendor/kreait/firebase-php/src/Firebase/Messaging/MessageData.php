@@ -58,16 +58,16 @@ final class MessageData implements JsonSerializable
 
     public function jsonSerialize(): array
     {
-        return $this->toArray();
+        return $this->data;
     }
 
     private static function isBinary(string $value): bool
     {
-        return mb_detect_encoding($value, (array) mb_detect_order(), true) === false;
+        return mb_detect_encoding($value, mb_detect_order(), true) === false;
     }
 
     /**
-     * @see https://firebase.google.com/docs/cloud-messaging/concept-options#data_messages
+     * @see https://firebase.google.com/docs/cloud-messaging/customize-messages/set-message-type#data-messages
      *
      * @param non-empty-string $key
      *

@@ -36,12 +36,8 @@ final class VerifySessionCookie
         return new self($this->sessionCookie, $this->leewayInSeconds, $tenantId);
     }
 
-    /**
-     * @param int<0, max> $seconds
-     */
     public function withLeewayInSeconds(int $seconds): self
     {
-        // @phpstan-ignore-next-line
         if ($seconds < 0) {
             throw new InvalidArgumentException('Leeway must not be negative');
         }

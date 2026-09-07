@@ -8,15 +8,13 @@ use JsonSerializable;
 use Kreait\Firebase\Exception\Messaging\InvalidArgument;
 
 use function array_filter;
-use function array_key_exists;
 use function is_int;
-use function is_string;
 use function preg_match;
 use function sprintf;
 
 /**
  * @see https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#androidconfig
- * @see https://firebase.google.com/docs/cloud-messaging/concept-options#setting-the-priority-of-a-message
+ * @see https://firebase.google.com/docs/cloud-messaging/customize-messages/setting-message-priority
  * @see https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#androidmessagepriority Android Message Priorities
  * @see https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#androidfcmoptions Android FCM Options Syntax
  *
@@ -82,26 +80,32 @@ use function sprintf;
 final class AndroidConfig implements JsonSerializable
 {
     private const MESSAGE_PRIORITY_NORMAL = 'normal';
-    private const MESSAGE_PRIORITY_HIGH = 'high';
-    private const NOTIFICATION_PRIORITY_UNSPECIFIED = 'PRIORITY_UNSPECIFIED';
-    private const NOTIFICATION_PRIORITY_MIN = 'PRIORITY_MIN';
-    private const NOTIFICATION_PRIORITY_LOW = 'PRIORITY_LOW';
-    private const NOTIFICATION_PRIORITY_DEFAULT = 'PRIORITY_DEFAULT';
-    private const NOTIFICATION_PRIORITY_HIGH = 'PRIORITY_HIGH';
-    private const NOTIFICATION_PRIORITY_MAX = 'PRIORITY_MAX';
-    private const NOTIFICATION_VISIBILITY_PRIVATE = 'PRIVATE';
-    private const NOTIFICATION_VISIBILITY_PUBLIC = 'PUBLIC';
-    private const NOTIFICATION_VISIBILITY_SECRET = 'SECRET';
 
-    /** @var AndroidConfigShape */
-    private array $config;
+    private const MESSAGE_PRIORITY_HIGH = 'high';
+
+    private const NOTIFICATION_PRIORITY_UNSPECIFIED = 'PRIORITY_UNSPECIFIED';
+
+    private const NOTIFICATION_PRIORITY_MIN = 'PRIORITY_MIN';
+
+    private const NOTIFICATION_PRIORITY_LOW = 'PRIORITY_LOW';
+
+    private const NOTIFICATION_PRIORITY_DEFAULT = 'PRIORITY_DEFAULT';
+
+    private const NOTIFICATION_PRIORITY_HIGH = 'PRIORITY_HIGH';
+
+    private const NOTIFICATION_PRIORITY_MAX = 'PRIORITY_MAX';
+
+    private const NOTIFICATION_VISIBILITY_PRIVATE = 'PRIVATE';
+
+    private const NOTIFICATION_VISIBILITY_PUBLIC = 'PUBLIC';
+
+    private const NOTIFICATION_VISIBILITY_SECRET = 'SECRET';
 
     /**
      * @param AndroidConfigShape $config
      */
-    private function __construct(array $config)
+    private function __construct(private array $config)
     {
-        $this->config = $config;
     }
 
     public static function new(): self
@@ -116,8 +120,9 @@ final class AndroidConfig implements JsonSerializable
      */
     public static function fromArray(array $config): self
     {
-        if (array_key_exists('ttl', $config) && $config['ttl'] !== null) {
-            $config['ttl'] = self::ensureValidTtl($config['ttl']);
+        $ttl = $config['ttl'] ?? null;
+        if ($ttl !== null) {
+            $config['ttl'] = self::ensureValidTtl($ttl);
         }
 
         return new self($config);
@@ -238,31 +243,34 @@ final class AndroidConfig implements JsonSerializable
 
     public function jsonSerialize(): array
     {
-        return array_filter($this->config, static fn ($value) => $value !== null && $value !== []);
+        return array_filter($this->config, static fn($value): bool => $value !== null && $value !== []);
     }
 
     /**
-     * @param int|string $value
-     *
      * @throws InvalidArgument
-     *
      * @return non-empty-string
      */
-    private static function ensureValidTtl($value): string
+    private static function ensureValidTtl(int|string $value): string
     {
         $expectedPattern = '/^\d+s$/';
         $errorMessage = "The TTL of an AndroidConfig must be an positive integer or string matching {$expectedPattern}";
 
-        if (is_int($value) && $value >= 0) {
-            return sprintf('%ds', $value);
+        if (is_numeric($value)) {
+            $value = (int) $value;
         }
 
-        if (!is_string($value) || $value === '') {
+        if (is_int($value)) {
+            $value = sprintf('%ds', $value);
+        }
+
+        $value = trim($value);
+
+        if ($value === '') {
             throw new InvalidArgument($errorMessage);
         }
 
         if (preg_match('/^\d+$/', $value) === 1) {
-            return sprintf('%ds', $value);
+            return sprintf('%ss', $value);
         }
 
         if (preg_match($expectedPattern, $value) === 1) {

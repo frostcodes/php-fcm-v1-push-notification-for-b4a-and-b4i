@@ -20,17 +20,26 @@ final class UpdateUser implements Request
 {
     /** @phpstan-use EditUserTrait<self> */
     use EditUserTrait;
+
     public const DISPLAY_NAME = 'DISPLAY_NAME';
+
     public const PHOTO_URL = 'PHOTO_URL';
+
     public const EMAIL = 'EMAIL';
 
-    /** @var array<string> */
+    /**
+     * @var list<non-empty-string>
+     */
     private array $attributesToDelete = [];
 
-    /** @var string[] */
+    /**
+     * @var list<non-empty-string>
+     */
     private array $providersToDelete = [];
 
-    /** @var array<string, mixed>|null */
+    /**
+     * @var array<string, mixed>|null
+     */
     private ?array $customAttributes = null;
 
     private function __construct()
@@ -76,7 +85,11 @@ final class UpdateUser implements Request
                 case 'deleteattribute':
                 case 'deleteattributes':
                     foreach ((array) $value as $deleteAttribute) {
-                        if (!is_string($deleteAttribute) || $deleteAttribute === '') {
+                        if (!is_string($deleteAttribute)) {
+                            continue;
+                        }
+
+                        if ($deleteAttribute === '') {
                             continue;
                         }
 
@@ -115,7 +128,7 @@ final class UpdateUser implements Request
 
                 case 'phonenumber':
                 case 'phone':
-                    if (!$value) {
+                    if (in_array($value, [false, null, ''], true)) {
                         $request = $request->withRemovedPhoneNumber();
                     }
 
@@ -135,9 +148,21 @@ final class UpdateUser implements Request
                 case 'removeproviders':
                     $request = array_reduce(
                         (array) $value,
-                        static fn (self $request, $provider) => $request->withRemovedProvider($provider),
+                        static fn(self $request, $provider): UpdateUser => $request->withRemovedProvider($provider),
                         $request,
                     );
+
+                    break;
+
+                case 'resetmultifactor':
+                    if ($value === true) {
+                        $request = $request->resetMultiFactor();
+                    }
+
+                    break;
+
+                case 'multifactors':
+                    $request = $request->withMultiFactors($value);
 
                     break;
             }
@@ -159,8 +184,14 @@ final class UpdateUser implements Request
      */
     public function withRemovedProvider($provider): self
     {
+        $providerString = trim((string) $provider);
+
+        if ($providerString === '') {
+            return $this;
+        }
+
         $request = clone $this;
-        $request->providersToDelete[] = (string) $provider;
+        $request->providersToDelete[] = $providerString;
 
         return $request;
     }
@@ -193,6 +224,32 @@ final class UpdateUser implements Request
     }
 
     /**
+     * @param array<array-key, array{
+     *     'mfaEnrollmentId'?: string,
+     *     'displayName': string,
+     *     'phoneInfo': string,
+     *     'enrolledAt'?: string,
+     * }> $enrollments
+     */
+    public function withMultiFactors(array $enrollments): self
+    {
+        $request = clone $this;
+        $request->multiFactor ??= [];
+        $request->multiFactor['enrollments'] = $enrollments;
+
+        return $request;
+    }
+
+    public function resetMultiFactor(): self
+    {
+        $request = clone $this;
+        $request->multiFactor ??= [];
+        $request->multiFactor['enrollments'] = [];
+
+        return $request;
+    }
+
+    /**
      * @param array<string, mixed> $customAttributes
      */
     public function withCustomAttributes(array $customAttributes): self
@@ -203,6 +260,13 @@ final class UpdateUser implements Request
         return $request;
     }
 
+    /**
+     * @return array{
+     *     customAttributes?: string,
+     *     deleteAttribute?: list<non-empty-string>,
+     *     deleteProvider?: list<non-empty-string>,
+     * }
+     */
     public function jsonSerialize(): array
     {
         if (!$this->hasUid()) {
@@ -212,14 +276,14 @@ final class UpdateUser implements Request
         $data = $this->prepareJsonSerialize();
 
         if (is_array($this->customAttributes)) {
-            $data['customAttributes'] = empty($this->customAttributes) ? '{}' : Json::encode($this->customAttributes);
+            $data['customAttributes'] = $this->customAttributes === [] ? '{}' : Json::encode($this->customAttributes);
         }
 
-        if (!empty($this->attributesToDelete)) {
+        if ($this->attributesToDelete !== []) {
             $data['deleteAttribute'] = array_unique($this->attributesToDelete);
         }
 
-        if (!empty($this->providersToDelete)) {
+        if ($this->providersToDelete !== []) {
             $data['deleteProvider'] = $this->providersToDelete;
         }
 

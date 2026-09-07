@@ -7,6 +7,10 @@ namespace Kreait\Firebase\RemoteConfig;
 use JsonSerializable;
 
 /**
+ * @deprecated 7.4.0
+ *
+ * @codeCoverageIgnore
+ *
  * @phpstan-type RemoteConfigExplicitValueShape array{
  *     value: string
  * }
@@ -14,16 +18,10 @@ use JsonSerializable;
 final class ExplicitValue implements JsonSerializable
 {
     /**
-     * @var RemoteConfigExplicitValueShape
-     */
-    private array $data;
-
-    /**
      * @param RemoteConfigExplicitValueShape $data
      */
-    private function __construct(array $data)
+    private function __construct(private readonly array $data)
     {
-        $this->data = $data;
     }
 
     public static function fromString(string $value): self

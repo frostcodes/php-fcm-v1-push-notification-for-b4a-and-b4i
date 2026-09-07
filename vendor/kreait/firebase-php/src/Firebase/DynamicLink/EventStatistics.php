@@ -27,7 +27,9 @@ use function array_filter;
 final class EventStatistics implements Countable, IteratorAggregate
 {
     public const PLATFORM_ANDROID = 'ANDROID';
+
     public const PLATFORM_DESKTOP = 'DESKTOP';
+
     public const PLATFORM_IOS = 'IOS';
 
     // Any click on a Dynamic Link, irrespective to how it is handled and its destinations
@@ -46,15 +48,11 @@ final class EventStatistics implements Countable, IteratorAggregate
     // Re-opens of an app
     public const TYPE_APP_RE_OPEN = 'APP_RE_OPEN';
 
-    /** @var list<EventStatisticsShape> */
-    private array $events;
-
     /**
      * @param list<EventStatisticsShape> $events
      */
-    private function __construct(array $events)
+    private function __construct(private readonly array $events)
     {
-        $this->events = $events;
     }
 
     /**
@@ -107,12 +105,12 @@ final class EventStatistics implements Countable, IteratorAggregate
 
     public function filterByType(string $type): self
     {
-        return $this->filter(static fn (array $event) => ($event['event'] ?? null) === $type);
+        return $this->filter(static fn(array $event): bool => ($event['event'] ?? null) === $type);
     }
 
     public function filterByPlatform(string $platform): self
     {
-        return $this->filter(static fn (array $event) => ($event['platform'] ?? null) === $platform);
+        return $this->filter(static fn(array $event): bool => ($event['platform'] ?? null) === $platform);
     }
 
     public function filter(callable $filter): self
@@ -121,8 +119,6 @@ final class EventStatistics implements Countable, IteratorAggregate
     }
 
     /**
-     * @codeCoverageIgnore
-     *
      * @return Traversable<EventStatisticsShape>
      */
     public function getIterator(): Traversable
@@ -132,6 +128,6 @@ final class EventStatistics implements Countable, IteratorAggregate
 
     public function count(): int
     {
-        return (int) array_sum(array_column($this->events, 'count'));
+        return array_sum(array_column($this->events, 'count'));
     }
 }

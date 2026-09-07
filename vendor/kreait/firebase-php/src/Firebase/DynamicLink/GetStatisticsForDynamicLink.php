@@ -10,6 +10,7 @@ use Stringable;
 final class GetStatisticsForDynamicLink
 {
     public const DEFAULT_DURATION_IN_DAYS = 7;
+
     private int $durationInDays = self::DEFAULT_DURATION_IN_DAYS;
 
     private function __construct(private readonly string $dynamicLink)

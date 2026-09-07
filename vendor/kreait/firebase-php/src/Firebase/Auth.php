@@ -24,6 +24,7 @@ use Kreait\Firebase\Auth\SignInWithIdpCredentials;
 use Kreait\Firebase\Auth\SignInWithRefreshToken;
 use Kreait\Firebase\Auth\UserQuery;
 use Kreait\Firebase\Auth\UserRecord;
+use Kreait\Firebase\Contract\Transitional\FederatedUserFetcher;
 use Kreait\Firebase\Exception\Auth\AuthError;
 use Kreait\Firebase\Exception\Auth\FailedToVerifySessionCookie;
 use Kreait\Firebase\Exception\Auth\FailedToVerifyToken;
@@ -33,13 +34,14 @@ use Kreait\Firebase\Exception\Auth\UserNotFound;
 use Kreait\Firebase\Exception\InvalidArgumentException;
 use Kreait\Firebase\JWT\IdTokenVerifier;
 use Kreait\Firebase\JWT\SessionCookieVerifier;
+use Kreait\Firebase\JWT\Token\Parser;
 use Kreait\Firebase\Request\CreateUser;
 use Kreait\Firebase\Request\UpdateUser;
 use Kreait\Firebase\Util\DT;
 use Kreait\Firebase\Value\ClearTextPassword;
 use Kreait\Firebase\Value\Email;
 use Kreait\Firebase\Value\Uid;
-use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Token;
 use Lcobucci\JWT\UnencryptedToken;
 use Psr\Clock\ClockInterface;
@@ -57,9 +59,13 @@ use function trim;
 
 /**
  * @internal
+ *
+ * @phpstan-import-type UserRecordResponseShape from UserRecord
  */
-final class Auth implements Contract\Auth
+final class Auth implements Contract\Auth, FederatedUserFetcher
 {
+    private readonly Parser $jwtParser;
+
     public function __construct(
         private readonly ApiClient $client,
         private readonly ?CustomTokenViaGoogleCredentials $tokenGenerator,
@@ -67,6 +73,7 @@ final class Auth implements Contract\Auth
         private readonly SessionCookieVerifier $sessionCookieVerifier,
         private readonly ClockInterface $clock,
     ) {
+        $this->jwtParser = new Parser(new JoseEncoder());
     }
 
     public function getUser(Stringable|string $uid): UserRecord
@@ -84,7 +91,7 @@ final class Auth implements Contract\Auth
 
     public function getUsers(array $uids): array
     {
-        $uids = array_map(static fn ($uid) => Uid::fromString($uid)->value, $uids);
+        $uids = array_map(static fn($uid): string => Uid::fromString($uid)->value, $uids);
 
         $users = array_fill_keys($uids, null);
 
@@ -140,7 +147,7 @@ final class Auth implements Contract\Auth
             }
 
             $pageToken = $result['nextPageToken'] ?? null;
-        } while ($pageToken);
+        } while ($pageToken !== null);
     }
 
     public function createUser(array|CreateUser $properties): UserRecord
@@ -151,7 +158,7 @@ final class Auth implements Contract\Auth
 
         $response = $this->client->createUser($request);
 
-        return $this->getUserRecordFromResponse($response);
+        return $this->getUserRecordFromResponseAfterUserUpdate($response);
     }
 
     public function updateUser(Stringable|string $uid, array|UpdateUser $properties): UserRecord
@@ -164,7 +171,7 @@ final class Auth implements Contract\Auth
 
         $response = $this->client->updateUser($request);
 
-        return $this->getUserRecordFromResponse($response);
+        return $this->getUserRecordFromResponseAfterUserUpdate($response);
     }
 
     public function createUserWithEmailAndPassword(Stringable|string $email, Stringable|string $password): UserRecord
@@ -182,13 +189,13 @@ final class Auth implements Contract\Auth
 
         $response = $this->client->getUserByEmail($email);
 
-        $data = Json::decode((string) $response->getBody(), true);
+        $userRecord = self::getFirstUserRecordFromUserListResponse($response);
 
-        if (empty($data['users'][0])) {
+        if ($userRecord === null) {
             throw new UserNotFound("No user with email '{$email}' found.");
         }
 
-        return UserRecord::fromResponseData($data['users'][0]);
+        return $userRecord;
     }
 
     public function getUserByPhoneNumber(Stringable|string $phoneNumber): UserRecord
@@ -197,13 +204,29 @@ final class Auth implements Contract\Auth
 
         $response = $this->client->getUserByPhoneNumber($phoneNumber);
 
-        $data = Json::decode((string) $response->getBody(), true);
+        $userRecord = self::getFirstUserRecordFromUserListResponse($response);
 
-        if (empty($data['users'][0])) {
+        if ($userRecord === null) {
             throw new UserNotFound("No user with phone number '{$phoneNumber}' found.");
         }
 
-        return UserRecord::fromResponseData($data['users'][0]);
+        return $userRecord;
+    }
+
+    public function getUserByProviderUid(Stringable|string $providerId, Stringable|string $providerUid): UserRecord
+    {
+        $providerId = (string) $providerId;
+        $providerUid = (string) $providerUid;
+
+        $response = $this->client->getUserByProviderUid($providerId, $providerUid);
+
+        $userRecord = self::getFirstUserRecordFromUserListResponse($response);
+
+        if ($userRecord === null) {
+            throw new UserNotFound("No user with federated account ID '{$providerId}:{$providerUid}' found.");
+        }
+
+        return $userRecord;
     }
 
     public function createAnonymousUser(): UserRecord
@@ -298,12 +321,9 @@ final class Auth implements Contract\Auth
                 throw new FailedToSendActionLink($e->getMessage(), $e->getCode(), $e);
             }
 
-            if (!($idToken = $signInResult->idToken())) {
-                // @codeCoverageIgnoreStart
-                // This only happens if the response on Google's side has changed
-                // If it does, the tests will fail, but we don't have to cover that
+            $idToken = $signInResult->idToken();
+            if ($idToken === null) {
                 throw new FailedToSendActionLink("Failed to send action link: Unable to retrieve ID token for user assigned to email {$email}");
-                // @codeCoverageIgnoreEnd
             }
         }
 
@@ -350,7 +370,7 @@ final class Auth implements Contract\Auth
 
     public function createCustomToken(Stringable|string $uid, array $claims = [], $ttl = 3600): UnencryptedToken
     {
-        if (!$this->tokenGenerator) {
+        if ($this->tokenGenerator === null) {
             throw new AuthError('Custom Token Generation is disabled because the current credentials do not permit it');
         }
 
@@ -372,7 +392,7 @@ final class Auth implements Contract\Auth
     public function parseToken(string $tokenString): UnencryptedToken
     {
         try {
-            $parsedToken = Configuration::forUnsecuredSigner()->parser()->parse($tokenString);
+            $parsedToken = $this->jwtParser->parse($tokenString);
             assert($parsedToken instanceof UnencryptedToken);
         } catch (Throwable $e) {
             throw new InvalidArgumentException('The given token could not be parsed: '.$e->getMessage());
@@ -386,9 +406,6 @@ final class Auth implements Contract\Auth
         $verifier = $this->idTokenVerifier;
 
         $idTokenString = is_string($idToken) ? $idToken : $idToken->toString();
-        // The ID Token is annotated as non-empty-string or a valid Token, so it cannot be empty
-        // Static analysis are not always sure about that, so we'll help them here.
-        assert($idTokenString !== '');
 
         try {
             if ($leewayInSeconds !== null) {
@@ -406,8 +423,11 @@ final class Auth implements Contract\Auth
             return $verifiedToken;
         }
 
+        $userId = $verifiedToken->claims()->get('sub');
+        assert(is_string($userId) && $userId !== ''); // It's safe to assume that the 'sub' claim is always a string
+
         try {
-            $user = $this->getUser($verifiedToken->claims()->get('sub'));
+            $user = $this->getUser($userId);
         } catch (Throwable $e) {
             throw new FailedToVerifyToken("Error while getting the token's user: {$e->getMessage()}", 0, $e);
         }
@@ -439,8 +459,11 @@ final class Auth implements Contract\Auth
             return $verifiedSessionCookie;
         }
 
+        $userId = $verifiedSessionCookie->claims()->get('sub');
+        assert(is_string($userId) && $userId !== ''); // It's safe to assume that the 'sub' claim is always a string
+
         try {
-            $user = $this->getUser($verifiedSessionCookie->claims()->get('sub'));
+            $user = $this->getUser($userId);
         } catch (Throwable $e) {
             throw new FailedToVerifySessionCookie("Error while getting the session cookie's user: {$e->getMessage()}", 0, $e);
         }
@@ -455,8 +478,13 @@ final class Auth implements Contract\Auth
     public function verifyPasswordResetCode(string $oobCode): string
     {
         $response = $this->client->verifyPasswordResetCode($oobCode);
+        $responseData = Json::decode((string) $response->getBody(), true);
 
-        return Json::decode((string) $response->getBody(), true)['email'];
+        if (!array_key_exists('email', $responseData) || $responseData['email'] === '') {
+            throw new AuthError('Expected API response to contain a field "email" being a non-empty string, got: '.gettype($responseData));
+        }
+
+        return $responseData['email'];
     }
 
     public function confirmPasswordReset(string $oobCode, $newPassword, bool $invalidatePreviousSessions = true): string
@@ -464,8 +492,13 @@ final class Auth implements Contract\Auth
         $newPassword = ClearTextPassword::fromString($newPassword)->value;
 
         $response = $this->client->confirmPasswordReset($oobCode, $newPassword);
+        $responseData = Json::decode((string) $response->getBody(), true);
 
-        $email = Json::decode((string) $response->getBody(), true)['email'];
+        if (!array_key_exists('email', $responseData) || $responseData['email'] === '') {
+            throw new AuthError('Expected API response to contain a field "email" being a non-empty string, got: '.gettype($responseData));
+        }
+
+        $email = $responseData['email'];
 
         if ($invalidatePreviousSessions) {
             $this->revokeRefreshTokens($this->getUserByEmail($email)->uid);
@@ -488,13 +521,13 @@ final class Auth implements Contract\Auth
         $provider = array_values(
             array_filter(
                 array_map('strval', (array) $provider),
-                static fn (string $value) => $value !== '',
+                static fn(string $value): bool => $value !== '',
             ),
         );
 
         $response = $this->client->unlinkProvider($uid, $provider);
 
-        return $this->getUserRecordFromResponse($response);
+        return $this->getUserRecordFromResponseAfterUserUpdate($response);
     }
 
     public function signInAsUser($user, ?array $claims = null): SignInResult
@@ -544,11 +577,12 @@ final class Auth implements Contract\Auth
     {
         $result = $this->client->handleSignIn(SignInAnonymously::new());
 
-        if ($result->idToken()) {
+        if ($result->idToken() !== null) {
             return $result;
         }
 
-        if ($uid = ($result->data()['localId'] ?? null)) {
+        $uid = $result->firebaseUserId();
+        if ($uid !== null) {
             return $this->signInAsUser($uid);
         }
 
@@ -627,11 +661,15 @@ final class Auth implements Contract\Auth
      * @throws Exception\AuthException
      * @throws Exception\FirebaseException
      */
-    private function getUserRecordFromResponse(ResponseInterface $response): UserRecord
+    private function getUserRecordFromResponseAfterUserUpdate(ResponseInterface $response): UserRecord
     {
-        $uid = Json::decode((string) $response->getBody(), true)['localId'];
+        $responseData = Json::decode((string) $response->getBody(), true);
 
-        return $this->getUser($uid);
+        if (!array_key_exists('localId', $responseData) || $responseData['localId'] === '') {
+            throw new AuthError('Expected API response to contain a field "localId" being a non-empty string, got: '.gettype($responseData));
+        }
+
+        return $this->getUser($responseData['localId']);
     }
 
     private function userSessionHasBeenRevoked(UnencryptedToken $verifiedToken, UserRecord $user, ?int $leewayInSeconds = null): bool
@@ -646,10 +684,26 @@ final class Auth implements Contract\Auth
 
         $tokenAuthenticatedAt = DT::toUTCDateTimeImmutable($verifiedToken->claims()->get('auth_time'));
 
-        if ($leewayInSeconds) {
+        if ($leewayInSeconds !== null) {
             $tokenAuthenticatedAt = $tokenAuthenticatedAt->modify('-'.$leewayInSeconds.' seconds');
         }
 
         return $tokenAuthenticatedAt->getTimestamp() < $validSince->getTimestamp();
+    }
+
+    private static function getFirstUserRecordFromUserListResponse(ResponseInterface $response): ?UserRecord
+    {
+        /** @var array{users?: list<UserRecordResponseShape>} $data */
+        $data = Json::decode((string) $response->getBody(), true);
+
+        if (!array_key_exists('users', $data)) {
+            return null;
+        }
+
+        $userData = array_shift($data['users']);
+
+        return $userData !== null
+            ? UserRecord::fromResponseData($userData)
+            : null;
     }
 }

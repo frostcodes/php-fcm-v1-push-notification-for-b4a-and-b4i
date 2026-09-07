@@ -16,7 +16,9 @@ use function strtr;
 final class TenantAwareAuthResourceUrlBuilder
 {
     private const URL_FORMAT = 'https://identitytoolkit.googleapis.com/{version}/projects/{projectId}/tenants/{tenantId}{api}';
+
     private const EMULATOR_URL_FORMAT = 'http://{host}/identitytoolkit.googleapis.com/{version}/projects/{projectId}/tenants/{tenantId}{api}';
+
     private const DEFAULT_API_VERSION = 'v1';
 
     /**

@@ -9,10 +9,15 @@ use GuzzleHttp\Psr7\Utils;
 use JsonSerializable;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
+use Stringable;
 
 use function trim;
 
 /**
+ * @deprecated 7.14.0 Firebase Dynamic Links is deprecated and should not be used in new projects. The service will
+ *                     shut down on August 25, 2025. The component will remain in the SDK until then, but as the
+ *                     Firebase service is deprecated, this component is also deprecated
+ *
  * @see https://github.com/googleapis/google-api-nodejs-client/blob/main/src/apis/firebasedynamiclinks/v1.ts
  *
  * @phpstan-type DynamicLinkWarningShape array{
@@ -26,7 +31,7 @@ use function trim;
  *     warning?: list<DynamicLinkWarningShape>
  * }
  */
-final class DynamicLink implements JsonSerializable
+final class DynamicLink implements JsonSerializable, Stringable
 {
     /**
      * @param DynamicLinkShape $data
@@ -45,7 +50,10 @@ final class DynamicLink implements JsonSerializable
      */
     public static function fromApiResponse(ResponseInterface $response): self
     {
-        return new self(Json::decode((string) $response->getBody(), true));
+        /** @var DynamicLinkShape $decoded */
+        $decoded = Json::decode((string) $response->getBody(), true);
+
+        return new self($decoded);
     }
 
     public function uri(): UriInterface
@@ -85,7 +93,7 @@ final class DynamicLink implements JsonSerializable
 
     public function hasWarnings(): bool
     {
-        return !empty($this->warnings());
+        return $this->warnings() !== [];
     }
 
     public function jsonSerialize(): array

@@ -16,21 +16,30 @@ use function mb_strtolower;
 use function preg_replace;
 
 /**
- * @codeCoverageIgnore
- *
  * @template T
  */
 trait EditUserTrait
 {
     protected ?string $uid = null;
+
     protected ?string $email = null;
+
     protected ?string $displayName = null;
+
     protected ?bool $emailIsVerified = null;
+
     protected ?string $phoneNumber = null;
+
     protected ?string $photoUrl = null;
+
     protected ?bool $markAsEnabled = null;
+
     protected ?bool $markAsDisabled = null;
+
     protected ?string $clearTextPassword = null;
+
+    /** @var array<string, mixed>|null */
+    protected ?array $multiFactor = null;
 
     /**
      * @param Stringable|mixed $uid
@@ -147,9 +156,9 @@ trait EditUserTrait
     {
         $disableUser = null;
 
-        if ($this->markAsDisabled) {
+        if ($this->markAsDisabled === true) {
             $disableUser = true;
-        } elseif ($this->markAsEnabled) {
+        } elseif ($this->markAsEnabled === true) {
             $disableUser = false;
         }
 
@@ -162,7 +171,8 @@ trait EditUserTrait
             'phoneNumber' => $this->phoneNumber,
             'photoUrl' => $this->photoUrl,
             'password' => $this->clearTextPassword,
-        ], static fn ($value) => $value !== null);
+            'mfa' => $this->multiFactor,
+        ], static fn($value): bool => $value !== null);
     }
 
     public function hasUid(): bool

@@ -6,23 +6,23 @@ namespace Kreait\Firebase\Auth\CreateSessionCookie;
 
 use Beste\Json;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Utils;
 use InvalidArgumentException;
 use Kreait\Firebase\Auth\CreateSessionCookie;
 use Kreait\Firebase\Auth\ProjectAwareAuthResourceUrlBuilder;
 use Kreait\Firebase\Auth\TenantAwareAuthResourceUrlBuilder;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 
-use const JSON_FORCE_OBJECT;
-
 use function array_filter;
+
+use const JSON_FORCE_OBJECT;
 
 /**
  * @internal
  */
-final class GuzzleApiClientHandler implements Handler
+final class GuzzleApiClientHandler
 {
     /**
      * @param non-empty-string $projectId
@@ -39,7 +39,7 @@ final class GuzzleApiClientHandler implements Handler
 
         try {
             $response = $this->client->send($request, ['http_errors' => false]);
-        } catch (GuzzleException $e) {
+        } catch (ClientExceptionInterface $e) {
             throw new FailedToCreateSessionCookie($action, null, 'Connection error', 0, $e);
         }
 
@@ -70,7 +70,8 @@ final class GuzzleApiClientHandler implements Handler
             'validDuration' => $action->ttlInSeconds(),
         ];
 
-        if ($tenantId = $action->tenantId()) {
+        $tenantId = $action->tenantId();
+        if (is_string($tenantId) && $tenantId !== '') {
             $urlBuilder = TenantAwareAuthResourceUrlBuilder::forProjectAndTenant($this->projectId, $tenantId);
         } else {
             $urlBuilder = ProjectAwareAuthResourceUrlBuilder::forProject($this->projectId);
@@ -82,8 +83,8 @@ final class GuzzleApiClientHandler implements Handler
 
         $headers = array_filter([
             'Content-Type' => 'application/json; charset=UTF-8',
-            'Content-Length' => (string) $body->getSize(),
-        ]);
+            'Content-Length' => (string) ($body->getSize() ?? ''),
+        ], fn($value): bool => $value !== '' && $value !== '0');
 
         return new Request('POST', $url, $headers, $body);
     }

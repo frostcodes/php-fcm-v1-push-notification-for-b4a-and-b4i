@@ -22,6 +22,9 @@ use Kreait\Firebase\Messaging\Topic;
  */
 interface Messaging
 {
+    /**
+     * @deprecated 7.5.0
+     */
     public const BATCH_MESSAGE_LIMIT = 500;
 
     /**
@@ -31,7 +34,7 @@ interface Messaging
      * @throws FirebaseException
      * @throws InvalidArgumentException
      *
-     * @return array<non-empty-string, mixed>
+     * @return array<array-key, mixed>
      */
     public function send(Message|array $message, bool $validateOnly = false): array;
 

@@ -22,11 +22,8 @@ use function mb_stripos;
  */
 class RemoteConfigApiExceptionConverter
 {
-    private ErrorResponseParser $responseParser;
-
-    public function __construct()
+    public function __construct(private readonly ErrorResponseParser $responseParser)
     {
-        $this->responseParser = new ErrorResponseParser();
     }
 
     public function convertException(Throwable $exception): RemoteConfigException

@@ -12,16 +12,17 @@ use function preg_match;
 
 final class SendReport
 {
-    private MessageTarget $target;
-
-    /** @var array<array-key, scalar>|null */
+    /**
+     * @var array<array-key, scalar>|null
+     */
     private ?array $result = null;
+
     private ?Message $message = null;
+
     private ?Throwable $error = null;
 
-    private function __construct(MessageTarget $target)
+    private function __construct(private readonly MessageTarget $target)
     {
-        $this->target = $target;
     }
 
     /**
@@ -63,10 +64,6 @@ final class SendReport
     public function messageTargetWasInvalid(): bool
     {
         $errorMessage = $this->error !== null ? $this->error->getMessage() : '';
-
-        if (!$this->messageWasInvalid()) {
-            return false;
-        }
 
         return preg_match('/((not.+valid)|invalid).+token/i', $errorMessage) === 1;
     }

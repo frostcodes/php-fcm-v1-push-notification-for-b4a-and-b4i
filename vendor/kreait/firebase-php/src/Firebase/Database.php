@@ -9,7 +9,6 @@ use Kreait\Firebase\Database\ApiClient;
 use Kreait\Firebase\Database\Reference;
 use Kreait\Firebase\Database\RuleSet;
 use Kreait\Firebase\Database\Transaction;
-use Kreait\Firebase\Database\UrlBuilder;
 use Kreait\Firebase\Exception\InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
 
@@ -22,15 +21,10 @@ use function trim;
  */
 final class Database implements Contract\Database
 {
-    private ApiClient $client;
-    private UrlBuilder $urlBuilder;
-    private UriInterface $uri;
-
-    public function __construct(UriInterface $uri, ApiClient $client, UrlBuilder $urlBuilder)
-    {
-        $this->uri = $uri;
-        $this->client = $client;
-        $this->urlBuilder = $urlBuilder;
+    public function __construct(
+        private readonly UriInterface $uri,
+        private readonly ApiClient $client,
+    ) {
     }
 
     public function getReference(?string $path = null): Reference
@@ -42,7 +36,7 @@ final class Database implements Contract\Database
         $path = '/'.ltrim($path, '/');
 
         try {
-            return new Reference($this->uri->withPath($path), $this->client, $this->urlBuilder);
+            return new Reference($this->uri->withPath($path), $this->client);
         } catch (\InvalidArgumentException $e) {
             throw new InvalidArgumentException($e->getMessage(), $e->getCode(), $e);
         }

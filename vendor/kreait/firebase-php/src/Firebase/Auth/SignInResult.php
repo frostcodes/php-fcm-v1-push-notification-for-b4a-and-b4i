@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Kreait\Firebase\Auth;
 
-use Lcobucci\JWT\Configuration;
+use Kreait\Firebase\JWT\Token\Parser;
+use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\UnencryptedToken;
 use stdClass;
 
@@ -16,31 +17,46 @@ use function property_exists;
 
 final class SignInResult
 {
-    /** @var non-empty-string|null */
+    /**
+     * @var non-empty-string|null
+     */
     private ?string $idToken = null;
 
-    /** @var non-empty-string|null */
+    /**
+     * @var non-empty-string|null
+     */
     private ?string $accessToken = null;
 
-    /** @var non-empty-string|null */
+    /**
+     * @var non-empty-string|null
+     */
     private ?string $refreshToken = null;
 
-    /** @var positive-int|null */
+    /**
+     * @var positive-int|null
+     */
     private ?int $ttl = null;
 
-    /** @var array<non-empty-string, mixed> */
+    /**
+     * @var array<non-empty-string, mixed>
+     */
     private array $data = [];
 
-    /** @var non-empty-string|null */
+    /**
+     * @var non-empty-string|null
+     */
     private ?string $firebaseUserId = null;
 
-    /** @var non-empty-string|null */
+    /**
+     * @var non-empty-string|null
+     */
     private ?string $tenantId = null;
-    private Configuration $config;
+
+    private readonly Parser $parser;
 
     private function __construct()
     {
-        $this->config = Configuration::forUnsecuredSigner();
+        $this->parser = new Parser(new JoseEncoder());
     }
 
     /**
@@ -77,24 +93,24 @@ final class SignInResult
      */
     public function firebaseUserId(): ?string
     {
-        // @codeCoverageIgnoreStart
-        if ($this->firebaseUserId) {
+        if ($this->firebaseUserId !== null) {
             return $this->firebaseUserId;
         }
-        // @codeCoverageIgnoreEnd
 
-        if ($this->idToken) {
-            $idToken = $this->config->parser()->parse($this->idToken);
+        if ($this->idToken !== null) {
+            $idToken = $this->parser->parse($this->idToken);
             assert($idToken instanceof UnencryptedToken);
 
             foreach (['sub', 'localId', 'user_id'] as $claim) {
-                if ($uid = $idToken->claims()->get($claim, false)) {
+                $uid = $idToken->claims()->get($claim, false);
+                if (is_string($uid) && $uid !== '') {
                     return $this->firebaseUserId = $uid;
                 }
             }
         }
 
-        if ($localId = $this->data['localId'] ?? null) {
+        $localId = $this->data['localId'] ?? null;
+        if (is_string($localId) && $localId !== '') {
             return $this->firebaseUserId = $localId;
         }
 
@@ -106,12 +122,12 @@ final class SignInResult
      */
     public function firebaseTenantId(): ?string
     {
-        if ($this->tenantId) {
+        if ($this->tenantId !== null) {
             return $this->tenantId;
         }
 
-        if ($this->idToken) {
-            $idToken = $this->config->parser()->parse($this->idToken);
+        if ($this->idToken !== null) {
+            $idToken = $this->parser->parse($this->idToken);
             assert($idToken instanceof UnencryptedToken);
 
             $firebaseClaims = $idToken->claims()->get('firebase', new stdClass());
@@ -167,10 +183,10 @@ final class SignInResult
     {
         return [
             'token_type' => 'Bearer',
-            'access_token' => $this->accessToken(),
+            'access_token' => $this->accessToken,
             'id_token' => $this->idToken,
-            'refresh_token' => $this->refreshToken(),
-            'expires_in' => $this->ttl(),
+            'refresh_token' => $this->refreshToken,
+            'expires_in' => $this->ttl,
         ];
     }
 }

@@ -16,8 +16,10 @@ use function count;
  */
 final class TopicSubscriptions implements Countable, IteratorAggregate
 {
-    /** @var list<TopicSubscription> */
-    private array $subscriptions;
+    /**
+     * @var list<TopicSubscription>
+     */
+    private readonly array $subscriptions;
 
     public function __construct(TopicSubscription ...$subscriptions)
     {
@@ -30,8 +32,6 @@ final class TopicSubscriptions implements Countable, IteratorAggregate
     }
 
     /**
-     * @codeCoverageIgnore
-     *
      * @return Traversable<TopicSubscription>
      */
     public function getIterator(): Traversable

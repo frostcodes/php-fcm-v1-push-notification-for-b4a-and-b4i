@@ -30,7 +30,7 @@ final class OrderByChild implements Sorter
         return $this->appendQueryParam($uri, 'orderBy', sprintf('"%s"', $this->childKey));
     }
 
-    public function modifyValue($value): mixed
+    public function modifyValue(mixed $value): mixed
     {
         if (!is_array($value)) {
             return $value;
@@ -38,7 +38,7 @@ final class OrderByChild implements Sorter
 
         $expression = str_replace('/', '.', $this->childKey);
 
-        uasort($value, static fn ($a, $b) => search($expression, $a) <=> search($expression, $b));
+        uasort($value, static fn($a, $b): int => search($expression, $a) <=> search($expression, $b));
 
         return $value;
     }

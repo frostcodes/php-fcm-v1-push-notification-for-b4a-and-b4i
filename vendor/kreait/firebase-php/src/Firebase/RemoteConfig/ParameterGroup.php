@@ -15,21 +15,18 @@ use JsonSerializable;
  */
 final class ParameterGroup implements JsonSerializable
 {
-    /**
-     * @var non-empty-string
-     */
-    private string $name;
     private string $description = '';
 
-    /** @var array<non-empty-string, Parameter> */
+    /**
+     * @var array<non-empty-string, Parameter>
+     */
     private array $parameters = [];
 
     /**
      * @param non-empty-string $name
      */
-    private function __construct(string $name)
+    private function __construct(private readonly string $name)
     {
-        $this->name = $name;
     }
 
     /**
@@ -94,6 +91,9 @@ final class ParameterGroup implements JsonSerializable
         ];
     }
 
+    /**
+     * @return RemoteConfigParameterGroupShape
+     */
     public function jsonSerialize(): array
     {
         return $this->toArray();

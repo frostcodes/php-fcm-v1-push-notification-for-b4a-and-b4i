@@ -2,7 +2,7 @@
 # PHP FCM sample for B4A
 
 Send push notifications to your B4A (android) or B4I (ios) app.
-This sample uses `kreait/firebase-php`.
+This sample uses `kreait/firebase-php` and requires at least PHP 8.2.
 
 # How to use
 

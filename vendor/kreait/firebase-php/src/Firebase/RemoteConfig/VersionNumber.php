@@ -6,10 +6,11 @@ namespace Kreait\Firebase\RemoteConfig;
 
 use JsonSerializable;
 use Kreait\Firebase\Exception\InvalidArgumentException;
+use Stringable;
 
 use function ctype_digit;
 
-final class VersionNumber implements JsonSerializable
+final class VersionNumber implements JsonSerializable, Stringable
 {
     /**
      * @param non-empty-string $value
@@ -18,14 +19,11 @@ final class VersionNumber implements JsonSerializable
     {
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return $this->value;
     }
 
-    /**
-     * @param positive-int|non-empty-string $value
-     */
     public static function fromValue($value): self
     {
         $valueString = (string) $value;

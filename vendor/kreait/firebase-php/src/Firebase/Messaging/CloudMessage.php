@@ -28,18 +28,21 @@ use function implode;
  */
 final class CloudMessage implements Message
 {
-    private MessageTarget $target;
     private MessageData $data;
+
     private Notification $notification;
+
     private AndroidConfig $androidConfig;
+
     private ApnsConfig $apnsConfig;
+
     private WebPushConfig $webPushConfig;
+
     private FcmOptions $fcmOptions;
 
     private function __construct(
-        MessageTarget $messageTarget,
+        private MessageTarget $target,
     ) {
-        $this->target = $messageTarget;
         $this->data = MessageData::fromArray([]);
         $this->notification = Notification::fromArray([]);
         $this->androidConfig = AndroidConfig::fromArray([]);
@@ -49,12 +52,14 @@ final class CloudMessage implements Message
     }
 
     /**
+     * @deprecated 7.16.0 Use `CloudMessage::new()` and one of `toToken()`, `toTopic()`, or `toCondition()` instead.
+     *
      * @param MessageTarget::CONDITION|MessageTarget::TOKEN|MessageTarget::TOPIC|MessageTarget::UNKNOWN $type
      * @param non-empty-string $value
      */
     public static function withTarget(string $type, string $value): self
     {
-        return self::new()->withChangedTarget($type, $value);
+        return new self(MessageTarget::with($type, $value));
     }
 
     public static function new(): self
@@ -76,27 +81,33 @@ final class CloudMessage implements Message
 
         $new = new self(self::determineTargetFromArray($data));
 
-        if ($messageData = ($data['data'] ?? null)) {
+        $messageData = $data['data'] ?? null;
+        if ($messageData !== null) {
             $new = $new->withData($messageData);
         }
 
-        if ($notification = ($data['notification'] ?? null)) {
+        $notification = $data['notification'] ?? null;
+        if ($notification !== null) {
             $new = $new->withNotification($notification);
         }
 
-        if ($androidConfig = ($data['android'] ?? null)) {
+        $androidConfig = $data['android'] ?? null;
+        if ($androidConfig !== null) {
             $new = $new->withAndroidConfig($androidConfig);
         }
 
-        if ($apnsConfig = ($data['apns'] ?? null)) {
+        $apnsConfig = $data['apns'] ?? null;
+        if ($apnsConfig !== null) {
             $new = $new->withApnsConfig($apnsConfig);
         }
 
-        if ($webPushConfig = ($data['webpush'] ?? null)) {
+        $webPushConfig = $data['webpush'] ?? null;
+        if ($webPushConfig !== null) {
             $new = $new->withWebPushConfig($webPushConfig);
         }
 
-        if ($fcmOptions = ($data['fcm_options'] ?? null)) {
+        $fcmOptions = $data['fcm_options'] ?? null;
+        if ($fcmOptions !== null) {
             return $new->withFcmOptions($fcmOptions);
         }
 
@@ -104,6 +115,8 @@ final class CloudMessage implements Message
     }
 
     /**
+     * @deprecated 7.16.0 Use one of `toToken()`, `toTopic()`, or `toCondition()` instead.
+     *
      * @param MessageTarget::CONDITION|MessageTarget::TOKEN|MessageTarget::TOPIC|MessageTarget::UNKNOWN $type
      * @param non-empty-string $value
      *
@@ -223,9 +236,53 @@ final class CloudMessage implements Message
         return $new;
     }
 
+    /**
+     * @param non-empty-string $token
+     */
+    public function toToken(string $token): self
+    {
+        $new = clone $this;
+        $new->target = MessageTarget::with(MessageTarget::TOKEN, $token);
+
+        return $new;
+    }
+
+    /**
+     * @param non-empty-string $topic
+     */
+    public function toTopic(string $topic): self
+    {
+        $new = clone $this;
+        $new->target = MessageTarget::with(MessageTarget::TOPIC, $topic);
+
+        return $new;
+    }
+
+    /**
+     * @param non-empty-string $condition
+     */
+    public function toCondition(string $condition): self
+    {
+        $new = clone $this;
+        $new->target = MessageTarget::with(MessageTarget::CONDITION, $condition);
+
+        return $new;
+    }
+
+    /**
+     * @deprecated 7.16.0
+     */
     public function hasTarget(): bool
     {
         return $this->target->type() !== MessageTarget::UNKNOWN;
+    }
+
+    /**
+     * @deprecated 7.16.0
+     */
+    public function target(): MessageTarget
+    {
+        return $this->target;
     }
 
     public function jsonSerialize(): array
@@ -247,28 +304,27 @@ final class CloudMessage implements Message
 
         return array_filter(
             $data,
-            static fn ($value) => $value !== null && $value !== [],
+            static fn($value): bool => $value !== null && $value !== [],
         );
     }
 
     /**
-     * @param array{
-     *     token?: string,
-     *     topic?: string,
-     *     condition?: string
-     * } $data
+     * @param array<mixed> $data
      */
     private static function determineTargetFromArray(array $data): MessageTarget
     {
-        if ($targetValue = $data[MessageTarget::CONDITION] ?? null) {
+        $targetValue = $data[MessageTarget::CONDITION] ?? null;
+        if ($targetValue !== null) {
             return MessageTarget::with(MessageTarget::CONDITION, $targetValue);
         }
 
-        if ($targetValue = $data[MessageTarget::TOKEN] ?? null) {
+        $targetValue = $data[MessageTarget::TOKEN] ?? null;
+        if ($targetValue !== null) {
             return MessageTarget::with(MessageTarget::TOKEN, $targetValue);
         }
 
-        if ($targetValue = $data[MessageTarget::TOPIC] ?? null) {
+        $targetValue = $data[MessageTarget::TOPIC] ?? null;
+        if ($targetValue) {
             return MessageTarget::with(MessageTarget::TOPIC, $targetValue);
         }
 

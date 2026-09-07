@@ -20,15 +20,12 @@ use Stringable;
  */
 final class CustomTokenViaGoogleCredentials
 {
-    private SignBlobInterface $signer;
-    private ?string $tenantId;
-    private JoseEncoder $encoder;
-    private Parser $parser;
+    private readonly JoseEncoder $encoder;
 
-    public function __construct(SignBlobInterface $signer, ?string $tenantId = null)
+    private readonly Parser $parser;
+
+    public function __construct(private readonly SignBlobInterface $signer, private readonly ?string $tenantId = null)
     {
-        $this->signer = $signer;
-        $this->tenantId = $tenantId;
         $this->encoder = new JoseEncoder();
         $this->parser = new Parser($this->encoder);
     }

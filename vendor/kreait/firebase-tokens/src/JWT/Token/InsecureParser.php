@@ -129,6 +129,14 @@ final class InsecureParser implements ParserInterface
                 continue;
             }
 
+            if (!is_scalar($claims[$claim])) {
+                continue;
+            }
+
+            if (is_bool($claims[$claim])) {
+                continue;
+            }
+
             $claims[$claim] = $this->convertDate($claims[$claim]);
         }
 
@@ -136,7 +144,7 @@ final class InsecureParser implements ParserInterface
     }
 
     /**
-     * @param array<string, mixed> $array
+     * @param array<array-key, mixed> $array
      * @param non-empty-string $part
      *
      * @phpstan-assert array<non-empty-string, mixed> $array

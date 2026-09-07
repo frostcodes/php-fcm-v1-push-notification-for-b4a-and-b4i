@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Kreait\Firebase\Exception\Database;
 
 use Kreait\Firebase\Database\Reference;
-use Kreait\Firebase\Exception\FirebaseException;
-use RuntimeException;
+use Kreait\Firebase\Exception\DatabaseException;
+use Kreait\Firebase\Exception\RuntimeException;
 use Throwable;
 
 use function trim;
 
-final class TransactionFailed extends RuntimeException implements FirebaseException
+final class TransactionFailed extends RuntimeException implements DatabaseException
 {
-    private Reference $reference;
+    private readonly Reference $reference;
 
     public function __construct(Reference $query, string $message = '', int $code = 0, ?Throwable $previous = null)
     {

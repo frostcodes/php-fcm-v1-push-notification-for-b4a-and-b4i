@@ -7,56 +7,49 @@ namespace Kreait\Firebase\RemoteConfig;
 use JsonSerializable;
 
 /**
- * @phpstan-import-type RemoteConfigPersonalizationValueShape from PersonalizationValue
- * @phpstan-import-type RemoteConfigExplicitValueShape from ExplicitValue
+ * @phpstan-import-type RemoteConfigParameterValueShape from ParameterValue
  *
- * @phpstan-type RemoteConfigInAppDefaultValueShape array{
- *     useInAppDefault: bool
- * }
+ * @todo Deprecate/Remove in 8.0
+ *
+ * @see ParameterValue
  */
 class DefaultValue implements JsonSerializable
 {
-    /**
-     * @var RemoteConfigExplicitValueShape|RemoteConfigInAppDefaultValueShape|RemoteConfigPersonalizationValueShape
-     */
-    private array $data;
-
-    /**
-     * @param RemoteConfigExplicitValueShape|RemoteConfigInAppDefaultValueShape|RemoteConfigPersonalizationValueShape $data
-     */
-    private function __construct(array $data)
+    private function __construct(private readonly ParameterValue $value)
     {
-        $this->data = $data;
     }
 
     public static function useInAppDefault(): self
     {
-        return new self(['useInAppDefault' => true]);
+        return new self(ParameterValue::inAppDefault());
     }
 
     public static function with(string $value): self
     {
-        return new self(['value' => $value]);
+        return new self(ParameterValue::withValue($value));
     }
 
     /**
-     * @return RemoteConfigExplicitValueShape|RemoteConfigInAppDefaultValueShape|RemoteConfigPersonalizationValueShape
-     */
-    public function toArray(): array
-    {
-        return $this->data;
-    }
-
-    /**
-     * @param RemoteConfigExplicitValueShape|RemoteConfigInAppDefaultValueShape|RemoteConfigPersonalizationValueShape $data
+     * @param RemoteConfigParameterValueShape $data
      */
     public static function fromArray(array $data): self
     {
-        return new self($data);
+        return new self(ParameterValue::fromArray($data));
     }
 
+    /**
+     * @return RemoteConfigParameterValueShape
+     */
+    public function toArray(): array
+    {
+        return $this->value->toArray();
+    }
+
+    /**
+     * @return RemoteConfigParameterValueShape
+     */
     public function jsonSerialize(): array
     {
-        return $this->data;
+        return $this->toArray();
     }
 }

@@ -25,7 +25,6 @@ use Kreait\Firebase\Exception\Auth\RevokedIdToken;
 use Kreait\Firebase\Exception\Auth\RevokedSessionCookie;
 use Kreait\Firebase\Exception\Auth\UserDisabled;
 use Kreait\Firebase\Exception\Auth\UserNotFound;
-use Kreait\Firebase\Request;
 use Kreait\Firebase\Request\CreateUser;
 use Kreait\Firebase\Request\UpdateUser;
 use Lcobucci\JWT\Token;
@@ -82,7 +81,7 @@ interface Auth
     /**
      * Creates a new user with the provided properties.
      *
-     * @param array<non-empty-string, mixed>|Request\CreateUser $properties
+     * @param array<non-empty-string, mixed>|CreateUser $properties
      *
      * @throws Exception\AuthException
      * @throws Exception\FirebaseException
@@ -92,7 +91,7 @@ interface Auth
     /**
      * Updates the given user with the given properties.
      *
-     * @param non-empty-array<non-empty-string, mixed>|Request\UpdateUser $properties
+     * @param non-empty-array<non-empty-string, mixed>|UpdateUser $properties
      *
      * @throws Exception\AuthException
      * @throws Exception\FirebaseException
@@ -438,7 +437,7 @@ interface Auth
     public function signInAnonymously(): SignInResult;
 
     /**
-     * @see https://cloud.google.com/identity-platform/docs/reference/rest/v1/accounts/signInWithIdp
+     * @see https://docs.cloud.google.com/identity-platform/docs/reference/rest/v1/accounts/signInWithIdp
      *
      * @param Stringable|non-empty-string $provider
      * @param non-empty-string $accessToken

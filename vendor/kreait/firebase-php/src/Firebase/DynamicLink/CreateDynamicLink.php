@@ -34,6 +34,7 @@ use Stringable;
 final class CreateDynamicLink implements JsonSerializable
 {
     public const WITH_UNGUESSABLE_SUFFIX = 'UNGUESSABLE';
+
     public const WITH_SHORT_SUFFIX = 'SHORT';
 
     /**

@@ -6,22 +6,22 @@ namespace Kreait\Firebase\Auth\SendActionLink;
 
 use Beste\Json;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Utils;
 use Kreait\Firebase\Auth\ProjectAwareAuthResourceUrlBuilder;
 use Kreait\Firebase\Auth\SendActionLink;
 use Kreait\Firebase\Auth\TenantAwareAuthResourceUrlBuilder;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 
-use const JSON_FORCE_OBJECT;
-
 use function array_filter;
+
+use const JSON_FORCE_OBJECT;
 
 /**
  * @internal
  */
-final class GuzzleApiClientHandler implements Handler
+final class GuzzleApiClientHandler
 {
     /**
      * @param non-empty-string $projectId
@@ -38,7 +38,7 @@ final class GuzzleApiClientHandler implements Handler
 
         try {
             $response = $this->client->send($request, ['http_errors' => false]);
-        } catch (GuzzleException $e) {
+        } catch (ClientExceptionInterface $e) {
             throw new FailedToSendActionLink('Failed to send action link: '.$e->getMessage(), $e->getCode(), $e);
         }
 
@@ -49,12 +49,14 @@ final class GuzzleApiClientHandler implements Handler
 
     private function createRequest(SendActionLink $action): RequestInterface
     {
-        $data = array_filter([
+        $data = [
             'requestType' => $action->type(),
             'email' => $action->email(),
-        ]) + $action->settings()->toArray();
+            ...$action->settings()->toArray(),
+        ];
 
-        if ($tenantId = $action->tenantId()) {
+        $tenantId = $action->tenantId();
+        if (is_string($tenantId) && $tenantId !== '') {
             $urlBuilder = TenantAwareAuthResourceUrlBuilder::forProjectAndTenant($this->projectId, $tenantId);
             $data['tenantId'] = $tenantId;
         } else {
@@ -63,7 +65,8 @@ final class GuzzleApiClientHandler implements Handler
 
         $url = $urlBuilder->getUrl('/accounts:sendOobCode');
 
-        if ($idTokenString = $action->idTokenString()) {
+        $idTokenString = $action->idTokenString();
+        if ($idTokenString !== null) {
             $data['idToken'] = $idTokenString;
         }
 
@@ -73,7 +76,7 @@ final class GuzzleApiClientHandler implements Handler
             'Content-Type' => 'application/json; charset=UTF-8',
             'Content-Length' => (string) $body->getSize(),
             'X-Firebase-Locale' => $action->locale(),
-        ]);
+        ], fn(?string $value): bool => !in_array($value, ['', null, '0'], true));
 
         return new Request('POST', $url, $headers, $body);
     }

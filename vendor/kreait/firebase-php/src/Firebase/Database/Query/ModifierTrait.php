@@ -11,12 +11,10 @@ use function array_merge;
 
 /**
  * @internal
- *
- * @codeCoverageIgnore
  */
 trait ModifierTrait
 {
-    public function modifyValue($value): mixed
+    public function modifyValue(mixed $value): mixed
     {
         return $value;
     }

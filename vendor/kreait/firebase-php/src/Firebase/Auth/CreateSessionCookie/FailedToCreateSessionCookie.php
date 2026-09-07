@@ -7,25 +7,24 @@ namespace Kreait\Firebase\Auth\CreateSessionCookie;
 use Beste\Json;
 use InvalidArgumentException;
 use Kreait\Firebase\Auth\CreateSessionCookie;
-use Kreait\Firebase\Exception\FirebaseException;
+use Kreait\Firebase\Exception\AuthException;
+use Kreait\Firebase\Exception\RuntimeException;
 use Psr\Http\Message\ResponseInterface;
-use RuntimeException;
 use Throwable;
 
-final class FailedToCreateSessionCookie extends RuntimeException implements FirebaseException
+final class FailedToCreateSessionCookie extends RuntimeException implements AuthException
 {
-    private CreateSessionCookie $action;
-    private ?ResponseInterface $response;
-
-    public function __construct(CreateSessionCookie $action, ?ResponseInterface $response, ?string $message = null, ?int $code = null, ?Throwable $previous = null)
-    {
+    public function __construct(
+        private readonly CreateSessionCookie $action,
+        private readonly ?ResponseInterface $response,
+        ?string $message = null,
+        ?int $code = null,
+        ?Throwable $previous = null,
+    ) {
         $message ??= '';
         $code ??= 0;
 
         parent::__construct($message, $code, $previous);
-
-        $this->action = $action;
-        $this->response = $response;
     }
 
     public static function withActionAndResponse(CreateSessionCookie $action, ResponseInterface $response): self

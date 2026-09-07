@@ -21,13 +21,10 @@ use const JSON_THROW_ON_ERROR;
  */
 final class WithGuzzle implements Handler
 {
-    private readonly ClientInterface $client;
-    private readonly ClockInterface $clock;
-
-    public function __construct(ClientInterface $client, ClockInterface $clock)
-    {
-        $this->client = $client;
-        $this->clock = $clock;
+    public function __construct(
+        private readonly ClientInterface $client,
+        private readonly ClockInterface $clock,
+    ) {
     }
 
     public function handle(FetchGooglePublicKeys $action): Keys
@@ -55,7 +52,7 @@ final class WithGuzzle implements Handler
 
     /**
      * @return array{
-     *     keys: array<string, string>,
+     *     keys: array<non-empty-string, non-empty-string>,
      *     ttl: int
      * }
      */
@@ -87,6 +84,14 @@ final class WithGuzzle implements Handler
         } catch (JsonException $e) {
             throw FetchingGooglePublicKeysFailed::because('Unexpected response: '.$e->getMessage());
         }
+
+        if (!is_array($keys)) {
+            $keys = [];
+        }
+
+        $keys = array_filter($keys, fn(mixed $key): bool => is_string($key));
+        $keys = array_map(fn(string $key): string => trim($key), $keys);
+        $keys = array_filter($keys, fn(string $key): bool => $key !== '');
 
         return [
             'keys' => $keys,

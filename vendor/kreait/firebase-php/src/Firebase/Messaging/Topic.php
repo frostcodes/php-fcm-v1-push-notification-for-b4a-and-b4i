@@ -6,13 +6,14 @@ namespace Kreait\Firebase\Messaging;
 
 use JsonSerializable;
 use Kreait\Firebase\Exception\Messaging\InvalidArgument;
+use Stringable;
 
 use function preg_match;
 use function preg_replace;
 use function sprintf;
 use function trim;
 
-final class Topic implements JsonSerializable
+final class Topic implements JsonSerializable, Stringable
 {
     /**
      * @param non-empty-string $value
@@ -40,7 +41,9 @@ final class Topic implements JsonSerializable
             throw new InvalidArgument('The topic name cannot be empty');
         }
 
-        if (preg_match('/[^a-zA-Z0-9-_.~]$/', $value)) {
+        $check = preg_match('/[^a-zA-Z0-9-_.~]$/', $value);
+
+        if ($check !== false && $check > 0) {
             throw new InvalidArgument(sprintf('Malformed topic name "%s".', $value));
         }
 

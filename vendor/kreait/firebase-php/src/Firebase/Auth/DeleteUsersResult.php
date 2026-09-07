@@ -12,30 +12,18 @@ use function is_countable;
 
 final class DeleteUsersResult
 {
-    private int $failureCount;
-    private int $successCount;
-
     /**
-     * @var array{
-     *             index: int,
-     *             localId: string,
-     *             message: string
-     *             }
-     */
-    private array $rawErrors;
-
-    /**
-     * @param array{
+     * @param list<array{
      *     index: int,
      *     localId: string,
      *     message: string
-     * } $rawErrors
+     * }> $rawErrors
      */
-    private function __construct(int $successCount, int $failureCount, array $rawErrors)
-    {
-        $this->successCount = $successCount;
-        $this->failureCount = $failureCount;
-        $this->rawErrors = $rawErrors;
+    private function __construct(
+        private readonly int $successCount,
+        private readonly int $failureCount,
+        private readonly array $rawErrors,
+    ) {
     }
 
     /**
@@ -63,11 +51,11 @@ final class DeleteUsersResult
     }
 
     /**
-     * @return array{
-     *                index: int,
-     *                localId: string,
-     *                message: string
-     *                }
+     * @return list<array{
+     *     index: int,
+     *     localId: string,
+     *     message: string
+     * }>
      */
     public function rawErrors(): array
     {

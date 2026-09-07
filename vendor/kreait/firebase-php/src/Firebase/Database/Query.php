@@ -21,6 +21,7 @@ use Kreait\Firebase\Exception\Database\DatabaseNotFound;
 use Kreait\Firebase\Exception\Database\UnsupportedQuery;
 use Kreait\Firebase\Exception\DatabaseException;
 use Psr\Http\Message\UriInterface;
+use Stringable;
 
 /**
  * A Query sorts and filters the data at a database location so only a subset of the child data is included.
@@ -32,25 +33,21 @@ use Psr\Http\Message\UriInterface;
  * Just as with a Reference, you can receive data from a Query by using the
  * {@see getSnapshot()} or {@see getValue()} method. You will only receive
  * Snapshots for the subset of the data that matches your query.
- *
- * @see https://firebase.google.com/docs/reference/js/firebase.database.Query
  */
-class Query
+class Query implements Stringable
 {
-    private Reference $reference;
-    private ApiClient $apiClient;
-
-    /** @var Filter[] */
+    /**
+     * @var Filter[]
+     */
     private array $filters = [];
+
     private ?Sorter $sorter = null;
 
     /**
      * @internal
      */
-    public function __construct(Reference $reference, ApiClient $apiClient)
+    public function __construct(private readonly Reference $reference, private readonly ApiClient $apiClient)
     {
-        $this->reference = $reference;
-        $this->apiClient = $apiClient;
     }
 
     /**
@@ -65,8 +62,6 @@ class Query
 
     /**
      * Returns a Reference to the Query's location.
-     *
-     * @see https://firebase.google.com/docs/reference/js/firebase.database.Query#ref
      */
     public function getReference(): Reference
     {
@@ -119,8 +114,6 @@ class Query
      * The ending point is inclusive, so children with exactly
      * the specified value will be included in the query.
      *
-     * @see https://firebase.google.com/docs/reference/js/firebase.database.Query#endAt
-     *
      * @param scalar $value
      */
     public function endAt($value): self
@@ -130,8 +123,6 @@ class Query
 
     /**
      * Creates a Query with the specified ending point (exclusive).
-     *
-     * @see https://firebase.google.com/docs/reference/js/firebase.database.Query#endbefore
      *
      * @param scalar $value
      */
@@ -143,8 +134,6 @@ class Query
     /**
      * Creates a Query which includes children which match the specified value.
      *
-     * @see https://firebase.google.com/docs/reference/js/firebase.database.Query#equalTo
-     *
      * @param scalar $value
      */
     public function equalTo($value): self
@@ -154,8 +143,6 @@ class Query
 
     /**
      * Creates a Query with the specified starting point (inclusive).
-     *
-     * @see https://firebase.google.com/docs/reference/js/firebase.database.Query#startAt
      *
      * @param scalar $value
      */
@@ -167,8 +154,6 @@ class Query
     /**
      * Creates a Query with the specified starting point (exclusive).
      *
-     * @see https://firebase.google.com/docs/reference/js/firebase.database.Query#startafter
-     *
      * @param scalar $value
      */
     public function startAfter($value): self
@@ -178,8 +163,6 @@ class Query
 
     /**
      * Generates a new Query limited to the first specific number of children.
-     *
-     * @see https://firebase.google.com/docs/reference/js/firebase.database.Query#limitToFirst
      */
     public function limitToFirst(int $limit): self
     {
@@ -188,8 +171,6 @@ class Query
 
     /**
      * Generates a new Query object limited to the last specific number of children.
-     *
-     * @see https://firebase.google.com/docs/reference/js/firebase.database.Query#limitToLast
      */
     public function limitToLast(int $limit): self
     {
@@ -201,8 +182,6 @@ class Query
      *
      * Queries can only order by one key at a time. Calling orderBy*() multiple times on
      * the same query is an error.
-     *
-     * @see https://firebase.google.com/docs/reference/js/firebase.database.Query#orderByChild
      *
      * @throws UnsupportedQuery if the query is already ordered
      */
@@ -219,8 +198,6 @@ class Query
      * Queries can only order by one key at a time. Calling orderBy*() multiple times on
      * the same query is an error.
      *
-     * @see https://firebase.google.com/docs/reference/js/firebase.database.Query#orderByKey
-     *
      * @throws UnsupportedQuery if the query is already ordered
      */
     public function orderByKey(): self
@@ -236,8 +213,6 @@ class Query
      *
      * Queries can only order by one key at a time. Calling orderBy*() multiple times on
      * the same query is an error.
-     *
-     * @see https://firebase.google.com/docs/reference/js/firebase.database.Query#orderByValue
      *
      * @throws UnsupportedQuery if the query is already ordered
      */

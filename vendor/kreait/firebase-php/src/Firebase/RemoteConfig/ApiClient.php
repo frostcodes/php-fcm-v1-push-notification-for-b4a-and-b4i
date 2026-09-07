@@ -9,7 +9,6 @@ use GuzzleHttp\ClientInterface;
 use Kreait\Firebase\Exception\RemoteConfigApiExceptionConverter;
 use Kreait\Firebase\Exception\RemoteConfigException;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\UriInterface;
 use Throwable;
 
 use function array_filter;
@@ -19,23 +18,32 @@ use function array_filter;
  */
 class ApiClient
 {
-    private ClientInterface $client;
-    private RemoteConfigApiExceptionConverter $errorHandler;
-    private string $baseUri;
+    private readonly string $baseUri;
 
-    public function __construct(string $projectId, ClientInterface $client)
-    {
-        $this->client = $client;
+    public function __construct(
+        string $projectId,
+        private readonly ClientInterface $client,
+        private readonly RemoteConfigApiExceptionConverter $errorHandler,
+    ) {
         $this->baseUri = "https://firebaseremoteconfig.googleapis.com/v1/projects/{$projectId}/remoteConfig";
-        $this->errorHandler = new RemoteConfigApiExceptionConverter();
     }
 
     /**
+     * @see https://firebase.google.com/docs/reference/remote-config/rest/v1/projects/getRemoteConfig
+     *
      * @throws RemoteConfigException
      */
-    public function getTemplate(): ResponseInterface
+    public function getTemplate(VersionNumber|int|string|null $versionNumber = null): ResponseInterface
     {
-        return $this->requestApi('GET', 'remoteConfig');
+        if (in_array($versionNumber, [null, '', '0'], true)) {
+            $versionNumber = VersionNumber::fromValue(0);
+        }
+
+        return $this->requestApi('GET', 'remoteConfig', [
+            'query' => [
+                'version_number' => (string) $versionNumber,
+            ],
+        ]);
     }
 
     /**
@@ -86,7 +94,7 @@ class ApiClient
         $since = $since?->format('Y-m-d\TH:i:s.v\Z');
         $until = $until?->format('Y-m-d\TH:i:s.v\Z');
         $lastVersionNumber = $lastVersionNumber !== null ? (string) $lastVersionNumber : null;
-        $pageSize = $pageSize ? (string) $pageSize : null;
+        $pageSize = $pageSize !== null ? (string) $pageSize : null;
 
         return $this->requestApi('GET', $uri, [
             'query' => array_filter([
@@ -95,7 +103,7 @@ class ApiClient
                 'endVersionNumber' => $lastVersionNumber,
                 'pageSize' => $pageSize,
                 'pageToken' => $nextPageToken,
-            ]),
+            ], fn(?string $value): bool => $value !== null),
         ]);
     }
 
@@ -114,12 +122,13 @@ class ApiClient
     }
 
     /**
-     * @param string|UriInterface $uri
+     * @param non-empty-string $method
+     * @param non-empty-string $uri
      * @param array<string, mixed>|null $options
      *
      * @throws RemoteConfigException
      */
-    private function requestApi(string $method, $uri, ?array $options = null): ResponseInterface
+    private function requestApi(string $method, string $uri, ?array $options = null): ResponseInterface
     {
         $options ??= [];
         $options['decode_content'] = 'gzip';

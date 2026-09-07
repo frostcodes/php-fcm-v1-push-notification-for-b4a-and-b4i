@@ -15,8 +15,10 @@ use function count;
  */
 final class Messages implements Countable, IteratorAggregate
 {
-    /** @var Message[] */
-    private array $messages;
+    /**
+     * @var Message[]
+     */
+    private readonly array $messages;
 
     public function __construct(Message ...$messages)
     {
@@ -24,9 +26,7 @@ final class Messages implements Countable, IteratorAggregate
     }
 
     /**
-     * @codeCoverageIgnore
-     *
-     * @return Traversable<Message>|Message[]
+     * @return Traversable<Message>
      */
     public function getIterator(): Traversable
     {

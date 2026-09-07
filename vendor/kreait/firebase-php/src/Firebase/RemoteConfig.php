@@ -28,9 +28,13 @@ final class RemoteConfig implements Contract\RemoteConfig
     {
     }
 
-    public function get(): Template
+    public function get(Version|VersionNumber|int|string|null $versionNumber = null): Template
     {
-        return $this->buildTemplateFromResponse($this->client->getTemplate());
+        if ($versionNumber !== null) {
+            $versionNumber = $this->ensureVersionNumber($versionNumber);
+        }
+
+        return $this->buildTemplateFromResponse($this->client->getTemplate($versionNumber));
     }
 
     public function validate($template): void
@@ -42,7 +46,8 @@ final class RemoteConfig implements Contract\RemoteConfig
     {
         $etag = $this->client
             ->publishTemplate($this->ensureTemplate($template))
-            ->getHeader('ETag');
+            ->getHeader('ETag')
+        ;
 
         $etag = array_shift($etag);
 
@@ -99,7 +104,7 @@ final class RemoteConfig implements Contract\RemoteConfig
             }
 
             $pageToken = $result['nextPageToken'] ?? null;
-        } while ($pageToken);
+        } while ($pageToken !== null);
     }
 
     /**
@@ -113,15 +118,26 @@ final class RemoteConfig implements Contract\RemoteConfig
     /**
      * @param VersionNumber|positive-int|non-empty-string $value
      */
-    private function ensureVersionNumber(VersionNumber|int|string $value): VersionNumber
+    private function ensureVersionNumber(Version|VersionNumber|int|string $value): VersionNumber
     {
-        return $value instanceof VersionNumber ? $value : VersionNumber::fromValue($value);
+        if ($value instanceof VersionNumber) {
+            return $value;
+        }
+
+        if ($value instanceof Version) {
+            return $value->versionNumber();
+        }
+
+        return VersionNumber::fromValue($value);
     }
 
     private function buildTemplateFromResponse(ResponseInterface $response): Template
     {
-        $etagHeader = $response->getHeader('ETag');
-        $etag = array_shift($etagHeader) ?: '*';
+        $etag = $response->getHeaderLine('ETag');
+
+        if ($etag === '') {
+            $etag = '*';
+        }
 
         $data = Json::decode((string) $response->getBody(), true);
 

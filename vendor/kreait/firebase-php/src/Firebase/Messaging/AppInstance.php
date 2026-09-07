@@ -12,20 +12,14 @@ use Kreait\Firebase\Util\DT;
  */
 final class AppInstance implements JsonSerializable
 {
-    private RegistrationToken $registrationToken;
-
-    /** @var array<string, mixed> */
-    private array $rawData;
-    private TopicSubscriptions $topicSubscriptions;
-
     /**
      * @param array<string, mixed> $rawData
      */
-    private function __construct(RegistrationToken $registrationToken, TopicSubscriptions $topicSubscriptions, array $rawData)
-    {
-        $this->registrationToken = $registrationToken;
-        $this->topicSubscriptions = $topicSubscriptions;
-        $this->rawData = $rawData;
+    private function __construct(
+        private readonly RegistrationToken $registrationToken,
+        private readonly TopicSubscriptions $topicSubscriptions,
+        private readonly array $rawData,
+    ) {
     }
 
     /**
@@ -70,8 +64,9 @@ final class AppInstance implements JsonSerializable
         $topic = $topic instanceof Topic ? $topic : Topic::fromValue($topic);
 
         return $this->topicSubscriptions
-            ->filter(static fn (TopicSubscription $subscription) => $topic->value() === $subscription->topic()->value())
-            ->count() > 0;
+            ->filter(static fn(TopicSubscription $subscription): bool => $topic->value() === $subscription->topic()->value())
+            ->count() > 0
+        ;
     }
 
     /**

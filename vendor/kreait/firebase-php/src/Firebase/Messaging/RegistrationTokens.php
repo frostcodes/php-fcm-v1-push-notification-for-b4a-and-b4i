@@ -11,7 +11,6 @@ use Traversable;
 
 use function array_map;
 use function count;
-use function is_array;
 use function is_string;
 
 /**
@@ -19,8 +18,10 @@ use function is_string;
  */
 final class RegistrationTokens implements Countable, IteratorAggregate
 {
-    /** @var list<RegistrationToken> */
-    private array $tokens;
+    /**
+     * @var list<RegistrationToken>
+     */
+    private readonly array $tokens;
 
     /**
      * @internal
@@ -31,7 +32,7 @@ final class RegistrationTokens implements Countable, IteratorAggregate
     }
 
     /**
-     * @param RegistrationTokens|RegistrationToken|list<RegistrationToken|string>|non-empty-string $values
+     * @param RegistrationTokens|RegistrationToken|array<RegistrationToken|string>|non-empty-string $values
      *
      * @throws InvalidArgument
      */
@@ -45,11 +46,11 @@ final class RegistrationTokens implements Countable, IteratorAggregate
             $tokens = [$values];
         } elseif (is_string($values)) {
             $tokens = [RegistrationToken::fromValue($values)];
-        } elseif (is_array($values)) {
+        } else {
             foreach ($values as $value) {
                 if ($value instanceof RegistrationToken) {
                     $tokens[] = $value;
-                } elseif (is_string($value) && $value !== '') {
+                } elseif ($value !== '') {
                     $tokens[] = RegistrationToken::fromValue($value);
                 }
             }
@@ -63,8 +64,6 @@ final class RegistrationTokens implements Countable, IteratorAggregate
     }
 
     /**
-     * @codeCoverageIgnore
-     *
      * @return Traversable<RegistrationToken>
      */
     public function getIterator(): Traversable
@@ -90,11 +89,7 @@ final class RegistrationTokens implements Countable, IteratorAggregate
      */
     public function asStrings(): array
     {
-        return array_values(
-            array_filter(
-                array_map(strval(...), $this->tokens),
-            ),
-        );
+        return array_map(fn(RegistrationToken $token): string => $token->value(), $this->tokens);
     }
 
     public function count(): int

@@ -17,25 +17,14 @@ use Psr\Http\Message\UriInterface;
 final class User
 {
     /**
-     * @var non-empty-string|null
-     */
-    private ?string $name;
-
-    /**
-     * @var non-empty-string|null
-     */
-    private ?string $email;
-    private ?UriInterface $imageUri;
-
-    /**
      * @param non-empty-string|null $name
      * @param non-empty-string|null $email
      */
-    private function __construct(?string $name, ?string $email, ?UriInterface $imageUri)
-    {
-        $this->name = $name;
-        $this->email = $email;
-        $this->imageUri = $imageUri;
+    private function __construct(
+        private readonly ?string $name,
+        private readonly ?string $email,
+        private readonly ?UriInterface $imageUri,
+    ) {
     }
 
     /**
@@ -46,7 +35,7 @@ final class User
     public static function fromArray(array $data): self
     {
         $imageUrl = $data['imageUrl'] ?? null;
-        $imageUri = $imageUrl ? new Uri($imageUrl) : null;
+        $imageUri = $imageUrl !== null ? new Uri($imageUrl) : null;
 
         return new self(
             $data['name'] ?? null,

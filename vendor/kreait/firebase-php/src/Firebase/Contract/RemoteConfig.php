@@ -16,8 +16,8 @@ use Traversable;
 /**
  * The Firebase Remote Config.
  *
- * @see https://firebase.google.com/docs/remote-config/use-config-rest
- * @see https://firebase.google.com/docs/remote-config/rest-reference
+ * @see https://firebase.google.com/docs/remote-config/automate-rc
+ * @see https://firebase.google.com/docs/reference/remote-config/rest
  *
  * @phpstan-import-type RemoteConfigTemplateShape from Template
  * @phpstan-import-type FindVersionsShape from FindVersions
@@ -25,9 +25,11 @@ use Traversable;
 interface RemoteConfig
 {
     /**
+     * @param Version|VersionNumber|positive-int|non-empty-string $versionNumber
+     *
      * @throws RemoteConfigException if something went wrong
      */
-    public function get(): Template;
+    public function get(Version|VersionNumber|int|string|null $versionNumber = null): Template;
 
     /**
      * Validates the given template without publishing it.

@@ -10,6 +10,7 @@ use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\Utils;
 use Kreait\Firebase\Exception\MessagingApiExceptionConverter;
+use Kreait\Firebase\Exception\MessagingException;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
 
@@ -18,13 +19,10 @@ use Throwable;
  */
 class AppInstanceApiClient
 {
-    private ClientInterface $client;
-    private MessagingApiExceptionConverter $errorHandler;
-
-    public function __construct(ClientInterface $client, MessagingApiExceptionConverter $errorHandler)
-    {
-        $this->client = $client;
-        $this->errorHandler = $errorHandler;
+    public function __construct(
+        private readonly ClientInterface $client,
+        private readonly MessagingApiExceptionConverter $errorHandler,
+    ) {
     }
 
     /**
@@ -49,7 +47,8 @@ class AppInstanceApiClient
                         'registration_tokens' => $tokenStrings,
                     ],
                 ])
-                ->then(static fn (ResponseInterface $response) => Json::decode((string) $response->getBody(), true));
+                ->then(static fn(ResponseInterface $response): mixed => Json::decode((string) $response->getBody(), true))
+            ;
         }
 
         $responses = Utils::settle($promises)->wait();
@@ -66,7 +65,7 @@ class AppInstanceApiClient
                     foreach ($response['value']['results'] as $index => $tokenResult) {
                         $token = $tokenStrings[$index];
 
-                        if (empty($tokenResult)) {
+                        if ($tokenResult === []) {
                             $topicResults[$token] = 'OK';
 
                             continue;
@@ -115,7 +114,8 @@ class AppInstanceApiClient
                         'registration_tokens' => $tokenStrings,
                     ],
                 ])
-                ->then(static fn (ResponseInterface $response) => Json::decode((string) $response->getBody(), true));
+                ->then(static fn(ResponseInterface $response): mixed => Json::decode((string) $response->getBody(), true))
+            ;
         }
 
         $responses = Utils::settle($promises)->wait();
@@ -132,7 +132,7 @@ class AppInstanceApiClient
                     foreach ($response['value']['results'] as $index => $tokenResult) {
                         $token = $tokenStrings[$index];
 
-                        if (empty($tokenResult)) {
+                        if ($tokenResult === []) {
                             $topicResults[$token] = 'OK';
 
                             continue;
@@ -165,11 +165,32 @@ class AppInstanceApiClient
     {
         return $this->client
             ->requestAsync('GET', '/iid/'.$registrationToken->value().'?details=true')
-            ->then(static function (ResponseInterface $response) use ($registrationToken) {
+            ->then(static function (ResponseInterface $response) use ($registrationToken): AppInstance {
                 $data = Json::decode((string) $response->getBody(), true);
 
                 return AppInstance::fromRawData($registrationToken, $data);
             })
-            ->otherwise(fn (Throwable $e) => Create::rejectionFor($this->errorHandler->convertException($e)));
+            ->otherwise(fn(Throwable $e): PromiseInterface => Create::rejectionFor($this->errorHandler->convertException($e)))
+        ;
+    }
+
+    /**
+     * @throws MessagingException
+     */
+    public function getAppInstance(RegistrationToken $registrationToken): AppInstance
+    {
+        try {
+            $response = $this->client->request('GET', '/iid/'.$registrationToken->value().'?details=true');
+        } catch (Throwable $e) {
+            throw $this->errorHandler->convertException($e);
+        }
+
+        try {
+            $data = Json::decode((string) $response->getBody(), true);
+        } catch (Throwable $e) {
+            throw $this->errorHandler->convertException($e);
+        }
+
+        return AppInstance::fromRawData($registrationToken, $data);
     }
 }

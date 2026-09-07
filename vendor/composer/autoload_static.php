@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitaaa20e702439186104697ddfa4561247
+class ComposerStaticInit705392bd4be3a83d71d3fcf494d36055
 {
     public static $files = array (
         '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
@@ -15,6 +15,7 @@ class ComposerStaticInitaaa20e702439186104697ddfa4561247
         '1232758e40b1d31bb295b6907de02c63' => __DIR__ . '/..' . '/beste/clock/src/Clock.php',
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
         '06b8a576aaa70a8517a94b7ff6b37e5c' => __DIR__ . '/..' . '/beste/json/src/Json.php',
+        'd05682204a32a3fc131bd951fefa8238' => __DIR__ . '/..' . '/cuyz/valinor/src/Compiler/node-functions.php',
         'b067bc7112e384b61c701452d53a14a8' => __DIR__ . '/..' . '/mtdowling/jmespath.php/src/JmesPath.php',
     );
 
@@ -27,7 +28,6 @@ class ComposerStaticInitaaa20e702439186104697ddfa4561247
         'R' => 
         array (
             'Rize\\' => 5,
-            'Riverline\\MultiPartParser\\' => 26,
             'Ramsey\\Uuid\\' => 12,
             'Ramsey\\Collection\\' => 18,
         ),
@@ -46,7 +46,6 @@ class ComposerStaticInitaaa20e702439186104697ddfa4561247
         'L' => 
         array (
             'Lcobucci\\JWT\\' => 13,
-            'Lcobucci\\Clock\\' => 15,
         ),
         'K' => 
         array (
@@ -90,10 +89,15 @@ class ComposerStaticInitaaa20e702439186104697ddfa4561247
             'Firebase\\JWT\\' => 13,
             'Fig\\Http\\Message\\' => 17,
         ),
+        'C' => 
+        array (
+            'CuyZ\\Valinor\\' => 13,
+        ),
         'B' => 
         array (
             'Brick\\Math\\' => 11,
             'Beste\\Clock\\' => 12,
+            'Beste\\Cache\\' => 12,
         ),
     );
 
@@ -110,10 +114,6 @@ class ComposerStaticInitaaa20e702439186104697ddfa4561247
         array (
             0 => __DIR__ . '/..' . '/rize/uri-template/src/Rize',
         ),
-        'Riverline\\MultiPartParser\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/riverline/multipart-parser/src',
-        ),
         'Ramsey\\Uuid\\' => 
         array (
             0 => __DIR__ . '/..' . '/ramsey/uuid/src',
@@ -128,8 +128,8 @@ class ComposerStaticInitaaa20e702439186104697ddfa4561247
         ),
         'Psr\\Http\\Message\\' => 
         array (
-            0 => __DIR__ . '/..' . '/psr/http-factory/src',
-            1 => __DIR__ . '/..' . '/psr/http-message/src',
+            0 => __DIR__ . '/..' . '/psr/http-message/src',
+            1 => __DIR__ . '/..' . '/psr/http-factory/src',
         ),
         'Psr\\Http\\Client\\' => 
         array (
@@ -150,10 +150,6 @@ class ComposerStaticInitaaa20e702439186104697ddfa4561247
         'Lcobucci\\JWT\\' => 
         array (
             0 => __DIR__ . '/..' . '/lcobucci/jwt/src',
-        ),
-        'Lcobucci\\Clock\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/lcobucci/clock/src',
         ),
         'Kreait\\Firebase\\JWT\\' => 
         array (
@@ -275,6 +271,10 @@ class ComposerStaticInitaaa20e702439186104697ddfa4561247
         array (
             0 => __DIR__ . '/..' . '/fig/http-message-util/src',
         ),
+        'CuyZ\\Valinor\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/cuyz/valinor/src',
+        ),
         'Brick\\Math\\' => 
         array (
             0 => __DIR__ . '/..' . '/brick/math/src',
@@ -282,6 +282,10 @@ class ComposerStaticInitaaa20e702439186104697ddfa4561247
         'Beste\\Clock\\' => 
         array (
             0 => __DIR__ . '/..' . '/beste/clock/src/Clock',
+        ),
+        'Beste\\Cache\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/beste/in-memory-cache/src',
         ),
     );
 
@@ -303,9 +307,9 @@ class ComposerStaticInitaaa20e702439186104697ddfa4561247
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitaaa20e702439186104697ddfa4561247::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitaaa20e702439186104697ddfa4561247::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInitaaa20e702439186104697ddfa4561247::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit705392bd4be3a83d71d3fcf494d36055::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit705392bd4be3a83d71d3fcf494d36055::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit705392bd4be3a83d71d3fcf494d36055::$classMap;
 
         }, null, ClassLoader::class);
     }

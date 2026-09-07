@@ -10,8 +10,10 @@ use function array_key_exists;
 
 class RuleSet implements JsonSerializable
 {
-    /** @var array<string, array<mixed>> */
-    private array $rules;
+    /**
+     * @var array<string, array<mixed>>
+     */
+    private readonly array $rules;
 
     /**
      * @param array<string, array<mixed>> $rules

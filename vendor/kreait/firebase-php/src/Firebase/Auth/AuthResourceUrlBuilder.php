@@ -17,7 +17,9 @@ use function strtr;
 final class AuthResourceUrlBuilder
 {
     private const URL_FORMAT = 'https://identitytoolkit.googleapis.com/{version}{api}';
+
     private const EMULATOR_URL_FORMAT = 'http://{host}/identitytoolkit.googleapis.com/{version}{api}';
+
     private const DEFAULT_API_VERSION = 'v1';
 
     /**

@@ -14,9 +14,9 @@ final class VerifyIdToken
      * @param non-empty-string|null $expectedTenantId
      */
     private function __construct(
-        private string $token,
-        private int $leewayInSeconds,
-        private ?string $expectedTenantId,
+        private readonly string $token,
+        private readonly int $leewayInSeconds,
+        private readonly ?string $expectedTenantId,
     ) {
     }
 
@@ -36,12 +36,8 @@ final class VerifyIdToken
         return new self($this->token, $this->leewayInSeconds, $tenantId);
     }
 
-    /**
-     * @param int<0, max> $seconds
-     */
     public function withLeewayInSeconds(int $seconds): self
     {
-        // @phpstan-ignore-next-line
         if ($seconds < 0) {
             throw new InvalidArgumentException('Leeway must not be negative');
         }

@@ -8,7 +8,7 @@ use Kreait\Firebase\Exception\AppCheck\InvalidAppCheckTokenOptions;
 
 /**
  * @phpstan-type AppCheckTokenOptionsShape array{
- *     ttl: int|null,
+ *     ttl?: int|null,
  * }
  */
 final class AppCheckTokenOptions

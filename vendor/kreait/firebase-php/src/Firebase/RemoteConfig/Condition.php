@@ -16,25 +16,14 @@ use JsonSerializable;
 class Condition implements JsonSerializable
 {
     /**
-     * @var non-empty-string
-     */
-    private string $name;
-
-    /**
-     * @var non-empty-string
-     */
-    private string $expression;
-    private ?TagColor $tagColor;
-
-    /**
      * @param non-empty-string $name
      * @param non-empty-string $expression
      */
-    private function __construct(string $name, string $expression, ?TagColor $tagColor = null)
-    {
-        $this->name = $name;
-        $this->expression = $expression;
-        $this->tagColor = $tagColor;
+    private function __construct(
+        private readonly string $name,
+        private string $expression,
+        private ?TagColor $tagColor = null,
+    ) {
     }
 
     /**
@@ -84,6 +73,11 @@ class Condition implements JsonSerializable
         return $condition;
     }
 
+    public function tagColor(): ?TagColor
+    {
+        return $this->tagColor;
+    }
+
     /**
      * @param TagColor|non-empty-string $tagColor
      */
@@ -114,6 +108,9 @@ class Condition implements JsonSerializable
         return $array;
     }
 
+    /**
+     * @return RemoteConfigConditionShape
+     */
     public function jsonSerialize(): array
     {
         return $this->toArray();

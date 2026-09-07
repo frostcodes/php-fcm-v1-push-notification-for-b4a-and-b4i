@@ -35,26 +35,24 @@ use function sprintf;
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification#syntax WebPush Notification Syntax
  *
  * @phpstan-type WebPushNotificationShape array{
- *     title: non-empty-string,
- *     options?: array{
- *         dir?: 'ltr'|'rtl'|'auto',
- *         lang?: string,
- *         badge?: non-empty-string,
- *         body?: non-empty-string,
- *         tag?: non-empty-string,
- *         icon?: non-empty-string,
- *         image?: non-empty-string,
- *         data?: mixed,
- *         vibrate?: list<positive-int>,
- *         renotify?: bool,
- *         requireInteraction?: bool,
- *         actions?: list<array{
- *             action: non-empty-string,
- *             title: non-empty-string,
- *             icon: non-empty-string
- *         }>,
- *         silent?: bool
- *     }
+ *     title: string|null,
+ *     dir?: 'ltr'|'rtl'|'auto',
+ *     lang?: string,
+ *     badge?: non-empty-string,
+ *     body?: non-empty-string,
+ *     tag?: non-empty-string,
+ *     icon?: non-empty-string,
+ *     image?: non-empty-string,
+ *     data?: mixed,
+ *     vibrate?: list<positive-int>,
+ *     renotify?: bool,
+ *     requireInteraction?: bool,
+ *     actions?: list<array{
+ *         action: non-empty-string,
+ *         title: non-empty-string,
+ *         icon: non-empty-string
+ *     }>,
+ *     silent?: bool
  * }
  *
  * @see https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#webpushconfig WebPush Config Syntax
@@ -69,9 +67,13 @@ use function sprintf;
 final class WebPushConfig implements JsonSerializable
 {
     private const URGENCY_VERY_LOW = 'very-low';
+
     private const URGENCY_LOW = 'low';
+
     private const URGENCY_NORMAL = 'normal';
+
     private const URGENCY_HIGH = 'high';
+
     private const VALID_URGENCIES = [
         self::URGENCY_VERY_LOW,
         self::URGENCY_LOW,
@@ -80,16 +82,10 @@ final class WebPushConfig implements JsonSerializable
     ];
 
     /**
-     * @var WebPushConfigShape
-     */
-    private array $config;
-
-    /**
      * @param WebPushConfigShape $config
      */
-    private function __construct(array $config)
+    private function __construct(private array $config)
     {
-        $this->config = $config;
     }
 
     public static function new(): self
@@ -102,8 +98,10 @@ final class WebPushConfig implements JsonSerializable
      */
     public static function fromArray(array $config): self
     {
-        if (array_key_exists('headers', $config) && is_array($config['headers'])) {
-            $config['headers'] = self::ensureValidHeaders($config['headers']);
+        $headers = $config['headers'] ?? null;
+
+        if (is_array($headers)) {
+            $config['headers'] = self::ensureValidHeaders($headers);
 
             if ($config['headers'] === []) {
                 unset($config['headers']);
@@ -146,9 +144,13 @@ final class WebPushConfig implements JsonSerializable
         return $config;
     }
 
+    /**
+     * @return WebPushConfigShape
+     */
     public function jsonSerialize(): array
     {
-        return array_filter($this->config, static fn ($value) => $value !== null);
+        // @phpstan-ignore notIdentical.alwaysTrue
+        return array_filter($this->config, static fn(array $value): bool => $value !== null);
     }
 
     /**

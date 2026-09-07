@@ -8,6 +8,7 @@ use GuzzleHttp\Psr7\Utils;
 use Kreait\Firebase\Auth\ActionCodeSettings;
 use Kreait\Firebase\Exception\InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
+use Stringable;
 
 use function array_filter;
 use function is_bool;
@@ -17,17 +18,26 @@ use function mb_strtolower;
 final class ValidatedActionCodeSettings implements ActionCodeSettings
 {
     private ?UriInterface $continueUrl = null;
+
     private ?bool $canHandleCodeInApp = null;
+
     private ?UriInterface $dynamicLinkDomain = null;
 
-    /** @var non-empty-string|null */
+    /**
+     * @var non-empty-string|null
+     */
     private ?string $androidPackageName = null;
 
-    /** @var non-empty-string|null */
+    /**
+     * @var non-empty-string|null
+     */
     private ?string $androidMinimumVersion = null;
+
     private ?bool $androidInstallApp = null;
 
-    /** @var non-empty-string|null */
+    /**
+     * @var non-empty-string|null
+     */
     private ?string $iOSBundleId = null;
 
     private function __construct()
@@ -46,13 +56,15 @@ final class ValidatedActionCodeSettings implements ActionCodeSettings
     {
         $instance = new self();
 
-        $settings = array_filter($settings, static fn ($value) => $value !== null);
+        $settings = array_filter($settings, static fn($value): bool => $value !== null);
 
         foreach ($settings as $key => $value) {
             switch (mb_strtolower($key)) {
                 case 'continueurl':
                 case 'url':
-                    $instance->continueUrl = Utils::uriFor($value);
+                    $instance->continueUrl = ($value !== null)
+                        ? Utils::uriFor(self::ensureNonEmptyString($value))
+                        : null;
 
                     break;
 
@@ -62,17 +74,19 @@ final class ValidatedActionCodeSettings implements ActionCodeSettings
                     break;
 
                 case 'dynamiclinkdomain':
-                    $instance->dynamicLinkDomain = Utils::uriFor($value);
+                    $instance->dynamicLinkDomain = ($value !== null)
+                        ? Utils::uriFor(self::ensureNonEmptyString($value))
+                        : null;
 
                     break;
 
                 case 'androidpackagename':
-                    $instance->androidPackageName = $value;
+                    $instance->androidPackageName = self::ensureNonEmptyString($value);
 
                     break;
 
                 case 'androidminimumversion':
-                    $instance->androidMinimumVersion = $value;
+                    $instance->androidMinimumVersion = self::ensureNonEmptyString($value);
 
                     break;
 
@@ -82,7 +96,7 @@ final class ValidatedActionCodeSettings implements ActionCodeSettings
                     break;
 
                 case 'iosbundleid':
-                    $instance->iOSBundleId = $value;
+                    $instance->iOSBundleId = self::ensureNonEmptyString($value);
 
                     break;
 
@@ -110,6 +124,22 @@ final class ValidatedActionCodeSettings implements ActionCodeSettings
             'androidMinimumVersion' => $this->androidMinimumVersion,
             'androidInstallApp' => $this->androidInstallApp,
             'iOSBundleId' => $this->iOSBundleId,
-        ], static fn ($value) => is_bool($value) || (is_string($value) && $value !== ''));
+        ], static fn(string|bool|null $value): bool => is_bool($value) || (is_string($value) && $value !== ''));
+    }
+
+    /**
+     * @return non-empty-string
+     */
+    private static function ensureNonEmptyString(mixed $value): string
+    {
+        if ($value instanceof Stringable) {
+            $value = (string) $value;
+        }
+
+        if (!is_string($value) || $value === '') {
+            throw new InvalidArgumentException('A non-empty string is required');
+        }
+
+        return $value;
     }
 }

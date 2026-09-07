@@ -1,0 +1,96 @@
+<?php
+
+declare(strict_types=1);
+
+namespace CuyZ\Valinor\Type\Types;
+
+use CuyZ\Valinor\Compiler\Node;
+use CuyZ\Valinor\Mapper\Tree\Message\ErrorMessage;
+use CuyZ\Valinor\Mapper\Tree\Message\MessageBuilder;
+use CuyZ\Valinor\Type\FixedType;
+use CuyZ\Valinor\Type\StringType;
+use CuyZ\Valinor\Type\Type;
+use CuyZ\Valinor\Utility\ValueDumper;
+
+use function CuyZ\Valinor\Compiler\value;
+use function str_contains;
+use function str_ends_with;
+use function str_replace;
+use function str_starts_with;
+use function substr;
+
+/** @internal */
+final class StringValueType implements StringType, FixedType
+{
+    private string $quoteChar;
+
+    public function __construct(private string $value) {}
+
+    public static function quoted(string $value): self
+    {
+        $value = match(true) {
+            str_starts_with($value, '"') && str_ends_with($value, '"') => $value,
+            str_starts_with($value, "'") && str_ends_with($value, "'") => $value,
+            str_contains($value, "'") && str_contains($value, '"') => "'" . str_replace("'", "\'", $value) . "'",
+            str_contains($value, "'") => '"' . $value . '"',
+            default => "'" . $value . "'",
+        };
+
+        $instance = new self(substr($value, 1, -1));
+        $instance->quoteChar = $value[0];
+
+        return $instance;
+    }
+
+    public function accepts(mixed $value): bool
+    {
+        return $value === $this->value;
+    }
+
+    public function compiledAccept(Node $node): Node
+    {
+        return $node->equals(value($this->value));
+    }
+
+    public function matches(Type $other): bool
+    {
+        return $other->accepts($this->value);
+    }
+
+    public function inferGenericsFrom(Type $other, Generics $generics): Generics
+    {
+        return $generics;
+    }
+
+    public function hasQuoteChar(): bool
+    {
+        return isset($this->quoteChar);
+    }
+
+    public function value(): string
+    {
+        return $this->value;
+    }
+
+    public function errorMessage(): ErrorMessage
+    {
+        return MessageBuilder::newError('Value {source_value} does not match string value {expected_value}.')
+            ->withCode('invalid_string_value')
+            ->withParameter('expected_value', ValueDumper::dump($this->value))
+            ->build();
+    }
+
+    public function nativeType(): NativeStringType
+    {
+        return NativeStringType::get();
+    }
+
+    public function toString(): string
+    {
+        if (isset($this->quoteChar)) {
+            return $this->quoteChar . $this->value . $this->quoteChar;
+        }
+
+        return $this->value;
+    }
+}

@@ -15,37 +15,57 @@ use function array_filter;
  *     sortBy?: self::FIELD_*,
  *     order?: self::ORDER_*,
  *     offset?: int<0, max>,
- *     limit?: int<1, self::MAX_LIMIT>,
+ *     limit?: positive-int,
  *     filter?: array<self::FILTER_*, non-empty-string>
  * }
  */
 class UserQuery implements JsonSerializable
 {
-    public const FIELD_CREATED_AT = 'CREATED_AT';
-    public const FIELD_LAST_LOGIN_AT = 'LAST_LOGIN_AT';
-    public const FIELD_NAME = 'NAME';
-    public const FIELD_USER_EMAIL = 'USER_EMAIL';
-    public const FIELD_USER_ID = 'USER_ID';
-    public const FILTER_EMAIL = 'email';
-    public const FILTER_PHONE_NUMBER = 'phoneNumber';
-    public const FILTER_USER_ID = 'userId';
-    public const ORDER_ASC = 'ASC';
-    public const ORDER_DESC = 'DESC';
-    public const MAX_LIMIT = 500;
+    final public const FIELD_CREATED_AT = 'CREATED_AT';
 
-    /** @var int<1, self::MAX_LIMIT>|null */
+    final public const FIELD_LAST_LOGIN_AT = 'LAST_LOGIN_AT';
+
+    final public const FIELD_NAME = 'NAME';
+
+    final public const FIELD_USER_EMAIL = 'USER_EMAIL';
+
+    final public const FIELD_USER_ID = 'USER_ID';
+
+    final public const FILTER_EMAIL = 'email';
+
+    final public const FILTER_PHONE_NUMBER = 'phoneNumber';
+
+    final public const FILTER_USER_ID = 'userId';
+
+    final public const ORDER_ASC = 'ASC';
+
+    final public const ORDER_DESC = 'DESC';
+
+    final public const MAX_LIMIT = 500;
+
+    /**
+     * @var positive-int|null
+     */
     private ?int $limit = null;
 
-    /** @var int<0, max>|null */
+    /**
+     * @var int<0, max>|null
+     */
     private ?int $offset = null;
 
-    /** @var self::FIELD_*|null */
+    /**
+     * @var self::FIELD_*|null
+     */
     private ?string $sortBy = null;
 
-    /** @var self::ORDER_*|null */
+    /**
+     * @var self::ORDER_*|null
+     */
     private ?string $order = null;
 
-    /** @var array<self::FILTER_*, non-empty-string>|null */
+    /**
+     * @var array<self::FILTER_*, non-empty-string>|null
+     */
     private ?array $filter = null;
 
     private function __construct()
@@ -106,7 +126,7 @@ class UserQuery implements JsonSerializable
     }
 
     /**
-     * @param int<1, self::MAX_LIMIT> $limit
+     * @param positive-int $limit
      */
     public function withLimit(int $limit): self
     {
@@ -136,7 +156,7 @@ class UserQuery implements JsonSerializable
             'offset' => $this->offset,
             'sortBy' => $this->sortBy,
             'order' => $this->order,
-        ]);
+        ], fn(int|bool|null|string $value): bool => $value !== null);
 
         if ($this->filter !== null) {
             $data['expression'] = $this->filter;

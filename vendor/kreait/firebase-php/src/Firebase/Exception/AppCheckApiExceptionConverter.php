@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kreait\Firebase\Exception;
 
+use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use GuzzleHttp\Exception\RequestException;
 use Kreait\Firebase\Exception\AppCheck\ApiConnectionFailed;
 use Kreait\Firebase\Exception\AppCheck\AppCheckError;
@@ -17,11 +18,8 @@ use Throwable;
  */
 final class AppCheckApiExceptionConverter
 {
-    private ErrorResponseParser $responseParser;
-
-    public function __construct()
+    public function __construct(private readonly ErrorResponseParser $responseParser)
     {
-        $this->responseParser = new ErrorResponseParser();
     }
 
     public function convertException(Throwable $exception): AppCheckException
@@ -49,7 +47,7 @@ final class AppCheckApiExceptionConverter
         }
 
         return match ($code) {
-            401, 403 => new PermissionDenied($message, $code, $e),
+            StatusCode::STATUS_UNAUTHORIZED, StatusCode::STATUS_FORBIDDEN => new PermissionDenied($message, $code, $e),
             default => new AppCheckError($message, $code, $e),
         };
     }

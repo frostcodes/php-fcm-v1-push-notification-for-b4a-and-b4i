@@ -9,8 +9,11 @@ use Psr\Http\Message\ResponseInterface;
 
 final class DynamicLinkStatistics
 {
-    /** @var array<string, list<array<string, string>>> */
+    /**
+     * @var array<string, list<array<string, string>>>
+     */
     private array $rawData = [];
+
     private EventStatistics $events;
 
     private function __construct()

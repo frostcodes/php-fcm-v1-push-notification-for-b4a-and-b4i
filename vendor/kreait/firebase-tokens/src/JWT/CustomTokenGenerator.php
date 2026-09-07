@@ -32,6 +32,9 @@ final class CustomTokenGenerator
         return new self($handler);
     }
 
+    /**
+     * @param non-empty-string $tenantId
+     */
     public function withTenantId(string $tenantId): self
     {
         $generator = clone $this;
@@ -50,11 +53,12 @@ final class CustomTokenGenerator
     }
 
     /**
-     * @param array<string, mixed> $claims
+     * @param non-empty-string $uid
+     * @param array<non-empty-string, mixed>|null $claims
      *
      * @throws CustomTokenCreationFailed
      */
-    public function createCustomToken(string $uid, ?array $claims = null, Duration|DateInterval|string|int $timeToLive = null): Token
+    public function createCustomToken(string $uid, array|null $claims = null, Duration|DateInterval|string|int|null $timeToLive = null): Token
     {
         $action = CreateCustomToken::forUid($uid);
 

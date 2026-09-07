@@ -9,18 +9,22 @@ namespace Kreait\Firebase\Auth;
  */
 final class SignInWithIdpCredentials implements IsTenantAware, SignIn
 {
-    private string $provider;
     private ?string $accessToken = null;
+
     private ?string $idToken = null;
+
     private ?string $linkingIdToken = null;
+
     private ?string $oauthTokenSecret = null;
+
     private ?string $rawNonce = null;
+
     private string $requestUri = 'http://localhost';
+
     private ?string $tenantId = null;
 
-    private function __construct(string $provider)
+    private function __construct(private readonly string $provider)
     {
-        $this->provider = $provider;
     }
 
     public static function withAccessToken(string $provider, string $accessToken): self
